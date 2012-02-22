@@ -776,7 +776,7 @@ public class Recxx extends AbstractRecFeed implements Runnable {
 	 */
 	private void logDifferenceToFile(String key, String columnName1, Object columnValue1, String columnName2,
 	        Object columnValue2, String percentageDiff, String absDiff) throws IOException {
-		StringTokenizer st = new StringTokenizer(key, "�");
+		StringTokenizer st = new StringTokenizer(key, "¶");
 
 		while (st.hasMoreTokens()) {
 			m_logger.write(st.nextToken());
