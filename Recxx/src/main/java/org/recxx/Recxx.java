@@ -604,6 +604,7 @@ public class Recxx extends AbstractRecFeed implements Runnable {
 					        + "file.filePath");
 				}
 				props.setProperty("filePath", filePath);
+				props.setProperty("encoding", superProps.getProperty(inputStub + "file.encoding", "UTF-8"));
 				props.setProperty("delimiter", superProps.getProperty(inputStub + "file.delimiter", ","));
 				props.setProperty("columnsSupplied", superProps.getProperty(inputStub + "file.firstRowColumns", "true"));
 				props.setProperty("dataTypesSupplied",

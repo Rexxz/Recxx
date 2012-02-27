@@ -1,9 +1,11 @@
 package org.recxx.facades;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,6 +38,7 @@ public class FileFacadeWorker extends AbstractRecFeed implements RecxxWorker {
     protected Properties m_Properties = new Properties();
 
     Logger LOGGER = Logger.getLogger(FileFacadeWorker.class.getName());
+	private String m_encoding;
 
     /**
      * Constructor for DatabaseFacadeWorker.
@@ -79,6 +82,7 @@ public class FileFacadeWorker extends AbstractRecFeed implements RecxxWorker {
 
         m_ColumnNames = m_Properties.getProperty("columns");
         m_Dtf.applyPattern(m_Properties.getProperty("dateFormat"));
+        m_encoding = m_Properties.getProperty("encoding");
     }
 
     /**
@@ -137,8 +141,8 @@ public class FileFacadeWorker extends AbstractRecFeed implements RecxxWorker {
         BufferedReader br;
 
         try {
-            FileReader fr = new FileReader(filePath);
-            br = new BufferedReader(fr);
+        	FileInputStream fis = new FileInputStream(filePath);
+            br = new BufferedReader(new InputStreamReader(fis, m_encoding));
             LOGGER.info("Found file " + filePath);
         } catch (FileNotFoundException fnfe) {
             LOGGER.log(Level.SEVERE, "FileNotFoundException. Message is "
@@ -175,9 +179,10 @@ public class FileFacadeWorker extends AbstractRecFeed implements RecxxWorker {
         String[] columns = getColumnsData(m_ColumnNames);
         String[] columnsClassNames = getColumnsClassNameData();
 
-        m_KeyColumns = ArrayUtils.convertStringKeyToArray(key);
+        m_KeyColumns = ArrayUtils.convertStringKeyToArray(key, !m_Properties.getProperty("delimiter").equals("\t") ? " " : m_Properties.getProperty("delimiter"));
         m_CompareColumns = ArrayUtils.convertStringKeyToArray(
-                m_Properties.getProperty("columnsToCompare"));
+				                m_Properties.getProperty("columnsToCompare"),
+				               !m_Properties.getProperty("delimiter").equals("\t") ? " " : m_Properties.getProperty("delimiter"));
 //         m_ReducedColumns = addArrays(m_KeyColumns,m_CompareColumns);
         m_ReducedColumns = addArraysProperly(columns, m_KeyColumns,
                 m_CompareColumns);
