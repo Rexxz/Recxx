@@ -8,7 +8,7 @@ public class SuperProperties extends Properties {
 	@Override
 	public String getProperty(String key) {
 		
-		return SystemConfiguration.replaceSystemProperties(super.getProperty(key));
+		return SystemUtils.replaceSystemProperties(super.getProperty(key));
 			
 	}
 	

@@ -9,28 +9,16 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 
 public class ComparisonResult {
 	
-	private final Object object1;
-	private final Object object2;
 	private final boolean different;
 	private final BigDecimal absoluteDifference;
 	private final BigDecimal percentageDifference;
 	
-	public ComparisonResult(Object object1, Object object2, boolean different, BigDecimal absoluteDifference, BigDecimal percentageDifference) {
-		this.object1 = object1;
-		this.object2 = object2;
+	public ComparisonResult(boolean different, BigDecimal absoluteDifference, BigDecimal percentageDifference) {
 		this.different = different;
 		this.absoluteDifference = absoluteDifference;
 		this.percentageDifference = percentageDifference;
 	}
 
-	public Object getObject1() {
-		return object1;
-	}
-	
-	public Object getObject2() {
-		return object2;
-	}
-	
 	public boolean isDifferent() {
 		return different;
 	}
@@ -43,12 +31,12 @@ public class ComparisonResult {
 		return percentageDifference;
 	}
 
-	public static final ComparisonResult valueOf(Object object1, Object object2, boolean different, BigDecimal absoluteDifference, BigDecimal percentageDifference) {
-		return new ComparisonResult(object1, object2, different, absoluteDifference, percentageDifference);
+	public static final ComparisonResult valueOf(boolean different, BigDecimal absoluteDifference, BigDecimal percentageDifference) {
+		return new ComparisonResult(different, absoluteDifference, percentageDifference);
 	}
 
-	public static final ComparisonResult valueOf(Object object1, Object object2, boolean different) {
-		return new ComparisonResult(object1, object2, different, null, null);
+	public static final ComparisonResult valueOf(boolean different) {
+		return new ComparisonResult(different, null, null);
 	}
 	
 	@Override

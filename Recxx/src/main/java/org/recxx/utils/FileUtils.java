@@ -14,7 +14,7 @@ public class FileUtils {
 		BufferedReader br = new BufferedReader(new FileReader(file));
 		String line;
 		while ((line = br.readLine()) != null) {
-			line = SystemConfiguration.replaceSystemProperties(line);
+			line = SystemUtils.replaceSystemProperties(line);
 			builder.append(line);
 			builder.append(System.getProperty("line.separator"));
 		}

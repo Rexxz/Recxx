@@ -277,7 +277,6 @@ public class Recxx extends AbstractRecFeed implements Runnable {
 						Object o2 = ((ArrayList) inputData2.get(key)).get(input2CompareColumnPosition[i]);
 
 						try {
-							// TODO Add support of equalsIgnoreCase for Strings
 							ComparisonResult result = ComparisonUtils.compare(o1, o2, smallestAbsoluteValue, tolerancePercentage, false);
 							if (result.isDifferent()) {
 								logDifference((String) inputProperties1.get("key"), key, input1Alias,
@@ -428,7 +427,6 @@ public class Recxx extends AbstractRecFeed implements Runnable {
 						Object o2 = ((ArrayList) inputData2.get(key)).get(input2CompareColumnPosition[i]);
 
 						try {
-							// TODO Add support of equalsIgnoreCase for Strings
 							ComparisonResult result = ComparisonUtils.compare(o1, o2, smallestAbsoluteValue, tolerancePercentage, false);
 							if (result.isDifferent()) {
 								logDifference((String) inputProperties1.get("key"), key, input1Alias,
@@ -561,8 +559,6 @@ public class Recxx extends AbstractRecFeed implements Runnable {
 			FILE_LOCATION = superProps.getProperty(propertiesStub + "logger.csv.file");
 			FILE_DELIMITER = superProps.getProperty(propertiesStub + "logger.csv.file.delimiter", CONSTANTS.DELIMITER);
 		}
-
-		// TODO remove the redundancies here!!
 
 		for (int i = 1; i <= numberOfInputs; i++) {
 			String inputStub = propertiesStub + "inputSource" + i + ".";

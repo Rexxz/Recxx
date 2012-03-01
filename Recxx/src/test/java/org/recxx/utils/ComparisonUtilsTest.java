@@ -174,10 +174,11 @@ public class ComparisonUtilsTest {
 		assertEquals(false, ComparisonUtils.compare(BigDecimal.valueOf(1.0124d), BigDecimal.valueOf(1.0123d)).isDifferent());  // Below default tolerance level
 		assertEquals(false, ComparisonUtils.compare(BigDecimal.valueOf(0.00000124d), BigDecimal.valueOf(0.00000123d)).isDifferent());  // Below default smallest absolute minimum level
 		assertEquals(true, ComparisonUtils.compare(BigDecimal.valueOf(1.0124d), BigDecimal.valueOf(1.0123d),BigDecimal.valueOf(0),BigDecimal.valueOf(0)).isDifferent());
+		assertEquals(true, ComparisonUtils.compare(null, BigDecimal.valueOf(1.0123d),BigDecimal.valueOf(0),BigDecimal.valueOf(0)).isDifferent());
 	}
 	
 	@Test(expected=UnsupportedOperationException.class)
-	public void testNonComparables() {
+	public void testIncomparables() {
 		assertEquals(true, ComparisonUtils.compare(dateOne, oneByte).isDifferent());
 	}
 	
