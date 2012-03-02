@@ -35,7 +35,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		this(new PropertiesConfiguration(filePath));
 	}
 
-	public RecxxConfiguration(PropertiesConfiguration propertiesConfig) {
+	public RecxxConfiguration(AbstractConfiguration propertiesConfig) {
 		SystemConfiguration systemConfig = new SystemConfiguration();
 		config = new CombinedConfiguration();
 		config.addConfiguration(systemConfig);
