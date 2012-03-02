@@ -80,11 +80,11 @@ public abstract class AbstractDestination implements Destination {
 		.append("======================").append(lineDelimiter)
 		.append("Reconciliation Summary").append(lineDelimiter)
 		.append("======================").append(lineDelimiter)
-		.append(summary.getAlias1()).append(" rows: ").append(summary.getAlias1Count()).append(lineDelimiter)
-		.append(summary.getAlias2()).append(" rows: ").append(summary.getAlias2Count()).append(lineDelimiter)
-		.append(summary.getAlias1()).append(" matched ").append(summary.getAlias2()).append(" : ").append(summary.getMatchCount()).append(lineDelimiter)
-		.append(summary.getAlias1()).append(" matched ").append(summary.getAlias2()).append(" % : ").append(summary.getAlias1MatchPercentage()).append(lineDelimiter)
-		.append(summary.getAlias2()).append(" matched ").append(summary.getAlias1()).append(" % : ").append(summary.getAlias2MatchPercentage()).append(lineDelimiter);
+		.append(summary.getAlias1()).append(" rows: ").append(delimiter).append(summary.getAlias1Count()).append(lineDelimiter)
+		.append(summary.getAlias2()).append(" rows: ").append(delimiter).append(summary.getAlias2Count()).append(lineDelimiter)
+		.append(summary.getAlias1()).append(" matched ").append(summary.getAlias2()).append(" : ").append(delimiter).append(summary.getMatchCount()).append(lineDelimiter)
+		.append(summary.getAlias1()).append(" matched ").append(summary.getAlias2()).append(" % : ").append(delimiter).append(summary.getAlias1MatchPercentage()).append(lineDelimiter)
+		.append(summary.getAlias2()).append(" matched ").append(summary.getAlias1()).append(" % : ").append(delimiter).append(summary.getAlias2MatchPercentage()).append(lineDelimiter);
 		return sb.toString();
 	}
 
