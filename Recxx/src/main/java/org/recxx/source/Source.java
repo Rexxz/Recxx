@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
-import org.apache.commons.collections.KeyValue;
+import org.recxx.domain.Column;
 import org.recxx.domain.Key;
 
 public interface Source<K> extends Callable<Source<Key>> {
@@ -15,7 +15,7 @@ public interface Source<K> extends Callable<Source<Key>> {
 
 	public abstract List<?> getRow(K key);
 
-	public abstract List<? extends KeyValue> getColumns();
+	public abstract List<Column> getColumns();
 	
 	public abstract List<String> getKeyColumns();
 	

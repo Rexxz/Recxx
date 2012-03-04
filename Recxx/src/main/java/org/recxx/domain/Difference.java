@@ -2,7 +2,6 @@ package org.recxx.domain;
 
 import java.util.List;
 
-import org.apache.commons.collections.KeyValue;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -11,7 +10,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 public class Difference {
 	
 	private final Key key;
-	private final KeyValue column;
+	private final Column column;
 	private final ComparisonResult comparison;
 	private final Object field1;
 	private final Object field2;
@@ -33,7 +32,7 @@ public class Difference {
 	public static class Builder {
 		
 		Key key;
-		KeyValue column;
+		Column column;
 		ComparisonResult comparison;
 		Object field1;
 		Object field2;
@@ -61,7 +60,7 @@ public class Difference {
 			return this;
 		}
 		
-		public Builder column(KeyValue value) {
+		public Builder column(Column value) {
 			column = value;
 			return this;
 		}
@@ -91,7 +90,7 @@ public class Difference {
 		return key;
 	}
 
-	public KeyValue getColumn() {
+	public Column getColumn() {
 		return column;
 	}
 

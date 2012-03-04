@@ -9,7 +9,6 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.recxx.domain.FileMetaData;
 import org.recxx.domain.Key;
-import org.recxx.domain.Column;
 
 public class CachedFileSource extends FileSource {
 	
@@ -36,8 +35,8 @@ public class CachedFileSource extends FileSource {
 				}
 				else {
 					if (line.length() != 0) {
-						Column<Key, List<?>> row = createKeyAndRow(line.toString());
-						dataMap.put(row.getKey(), row.getValue());
+						List<?> fields = parseRow(line.toString());
+						dataMap.put(createKey(fields), fields);
 						i++;
 						if (i % 10000 == 0) {
 							LOGGER.info("Loaded " + i + " rows");
@@ -61,12 +60,12 @@ public class CachedFileSource extends FileSource {
 		return dataMap.get(key);
 	}
 	
-	private Column<Key, List<?>> createKeyAndRow(String line) {
-		List<?> fields = parseRow(line);
+	private Key createKey(List<?> fields) {
 		List<String> keys =  new ArrayList<String>();
 		for (Integer index : fileMetaData.getKeyColumnIndexes()) {
 			keys.add(fields.get(index).toString());
 		}
-		return new Column<Key, List<?>>(new Key(keys), fields);
+		return new Key(keys);
 	}
+	
 }

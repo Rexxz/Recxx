@@ -32,13 +32,12 @@ public class FileSourceTest {
 								System.getProperty("file.separator") +
 								"test.csv";
 	private static List<String> keyColumns = Arrays.asList("Id","Name", "Balance", "Date");
-	private static Column<String, Class<?>> col1 = new Column<String, Class<?>>("Id", Integer.class);
-	private static Column<String, Class<?>> col2 = new Column<String, Class<?>>("Name", String.class);
-	private static Column<String, Class<?>> col3 = new Column<String, Class<?>>("Balance", Double.class);
-	private static Column<String, Class<?>> col4 = new Column<String, Class<?>>("Date", Date.class);
+	private static Column col1 = new Column("Id", Integer.class);
+	private static Column col2 = new Column("Name", String.class);
+	private static Column col3 = new Column("Balance", Double.class);
+	private static Column col4 = new Column("Date", Date.class);
 	
-	@SuppressWarnings("unchecked")
-	private static List<Column<String, Class<?>>> columns = Arrays.asList(col1, col2, col3, col4);
+	private static List<Column> columns = Arrays.asList(col1, col2, col3, col4);
 	private static String delimiter = ",";
 	private static char lineDelimiter = System.getProperty("line.separator").charAt(0);
 	private static boolean ignoreHeaderRow = true;
@@ -92,9 +91,9 @@ public class FileSourceTest {
 	
 		RandomAccessFile randomAccessFile = new RandomAccessFile(fileMetaData.getFilePath(), "rw");
 		StringBuilder builder = new StringBuilder();
-		for (Column<String, Class<?>> column : fileMetaData.getColumns()) {
+		for (Column column : fileMetaData.getColumns()) {
 			if (builder.length() > 0) builder.append(fileMetaData.getDelimiter());
-			builder.append(column.getKey()); 
+			builder.append(column.getName()); 
 		}
 		builder.append(fileMetaData.getLineDelimiter());
 		randomAccessFile.writeBytes(builder.toString());

@@ -7,12 +7,14 @@ import org.recxx.domain.Summary;
 
 public interface Destination {
 
-	void open() throws IOException;
+	abstract void open() throws IOException;
 	
-	void writeDifference(Difference difference);
+	abstract void writeDifference(Difference difference);
 	
-	void writeSummary(Summary summary);
+	abstract void writeSummary(Summary summary);
 	
-	void close() throws IOException;
+	abstract Summary getSummary();
+	
+	abstract void close() throws IOException;
 
 }

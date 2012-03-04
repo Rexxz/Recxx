@@ -82,10 +82,16 @@ public abstract class FileSource implements Source<Key> {
 		while (fileLine.contains(nullValue)) {
 			fileLine = fileLine.replaceAll(nullValue, replacement);
 		}
+		if (fileLine.startsWith(fileMetaData.getDelimiter())) {
+			fileLine = " " + fileLine;
+		}
+		if (fileLine.endsWith(fileMetaData.getDelimiter())) {
+			fileLine = fileLine + " ";
+		}
 		return fileLine;
 	}
 
-	public List<Column<String, Class<?>>> getColumns() {
+	public List<Column> getColumns() {
 		return fileMetaData.getColumns();
 	}
 	

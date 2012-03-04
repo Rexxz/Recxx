@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.junit.Test;
 
-public class CompactCharSequenceTest {
+public class KeyTest {
 
 	@Test
 	public void testCompactCharSequenceString() {

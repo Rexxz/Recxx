@@ -20,7 +20,7 @@ public class FileMetaData {
 	private final List<String> columnsToCompare;
 	private final List<String> dateFormats;
 	private final List<Integer> keyColumnIndexes;
-	private final List<Column<String, Class<?>>> columns;
+	private final List<Column> columns;
 
 	public static class Builder {
 		
@@ -33,7 +33,7 @@ public class FileMetaData {
 		 List<String> keyColumns;
 		 List<String> columnsToCompare;
 		 List<String> dateFormats;
-		 List<Column<String, Class<?>>> columns;
+		 List<Column> columns;
 		 
 		 public Builder filePath(String filePath) {
 			 this.filePath = filePath;
@@ -55,7 +55,7 @@ public class FileMetaData {
 			 return this;
 		 }
 		 
-		 public Builder columns(List<Column<String, Class<?>>> columns) {
+		 public Builder columns(List<Column> columns) {
 			 this.columns = columns;
 			 return this;
 		 }
@@ -89,13 +89,7 @@ public class FileMetaData {
 		this.lineDelimiter = builder.lineDelimiter;
 		this.ignoreHeaderRow = builder.ignoreHeaderRow;
 		this.keyColumnIndexes = generateKeyColumnIndexes(builder.keyColumns, builder.columns);
-		//TODO Reconsider this
-		if (builder.columnsToCompare == null && builder.keyColumns != null) {
-			this.columnsToCompare = generateColumnsCompare(builder.keyColumns, builder.columns);			
-		}
-		else {
-			this.columnsToCompare = builder.columnsToCompare;
-		}
+		this.columnsToCompare = generateColumnsToCompare(builder.columnsToCompare, builder.keyColumns, builder.columns);			
 	}
 		
 	public String getFilePath() {
@@ -110,7 +104,7 @@ public class FileMetaData {
 		return keyColumnIndexes;
 	}
 
-	public List<Column<String, Class<?>>> getColumns() {
+	public List<Column> getColumns() {
 		return columns;
 	}
 
@@ -136,26 +130,26 @@ public class FileMetaData {
 
 	public List<String> getColumnNames() {
 		List<String> columnNames = new ArrayList<String>();
-		for (Column<String, Class<?>> column : this.columns) {
-			columnNames.add(column.getKey());
+		for (Column column : this.columns) {
+			columnNames.add(column.getName());
 		}
 		return columnNames;
 	}
 
 	public List<Class<?>> getColumnTypes() {
 		List<Class<?>> types = new ArrayList<Class<?>>();
-		for (Column<String, Class<?>> column : this.columns) {
-			types.add(column.getValue());
+		for (Column column : this.columns) {
+			types.add(column.getType());
 		}
 		return types;
 	}
 
 	private List<Integer> generateKeyColumnIndexes(List<String> keyColumns,
-			List<Column<String, Class<?>>> columns) {
+													List<Column> columns) {
 		List<Integer> keyColumnIndexes = new ArrayList<Integer>();
 		if (keyColumns != null & columns != null) {
 			for (int i = 0; i < columns.size(); i++) {
-				if (keyColumns.contains(columns.get(i).getKey())) {
+				if (keyColumns.contains(columns.get(i).getName())) {
 					keyColumnIndexes.add(Integer.valueOf(i));
 				}
 			}
@@ -163,12 +157,17 @@ public class FileMetaData {
 		return keyColumnIndexes;
 	}
 	
-	private List<String> generateColumnsCompare(List<String> keyColumns,
-			List<Column<String, Class<?>>> columns) {
-		List<String> columnsToCompare = new ArrayList<String>();
-		for (int i = 0; i < columns.size(); i++) {
-			if (!keyColumns.contains(columns.get(i).getKey())) {
-				columnsToCompare.add(columns.get(i).getKey());
+	private List<String> generateColumnsToCompare(List<String> columnsToCompare,
+												List<String> keyColumns, 
+												List<Column> columns) {
+		if (keyColumns != null & columns != null) {
+			if (columnsToCompare == null || columnsToCompare.isEmpty()) {
+				columnsToCompare = new ArrayList<String>();
+				for (int i = 0; i < columns.size(); i++) {
+					if (!keyColumns.contains(columns.get(i).getName())) {
+						columnsToCompare.add(columns.get(i).getName());
+					}
+				}
 			}
 		}
 		return columnsToCompare;

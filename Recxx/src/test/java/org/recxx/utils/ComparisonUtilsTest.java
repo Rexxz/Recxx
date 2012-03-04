@@ -3,6 +3,7 @@ package org.recxx.utils;
 import static org.junit.Assert.assertEquals;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -181,5 +182,22 @@ public class ComparisonUtilsTest {
 	public void testIncomparables() {
 		assertEquals(true, ComparisonUtils.compare(dateOne, oneByte).isDifferent());
 	}
+	
+	@Test
+	public void testPercentageDifference() {
+		assertEquals(new BigDecimal(0.05, new MathContext(5)),ComparisonUtils.percentageDifference(new BigDecimal(100), new BigDecimal(105)));
+	}
+
+	@Test
+	public void testPercentageMatch() {
+		assertEquals(new BigDecimal(0.70, new MathContext(6)),ComparisonUtils.percentageMatch(new BigDecimal(70), new BigDecimal(100)));
+	}
+	
+	@Test
+	public void testPercentageMatchDouble() {
+		assertEquals(new BigDecimal(0.70, new MathContext(6)),ComparisonUtils.percentageMatch(70d, 100d));
+		assertEquals(BigDecimal.ZERO,ComparisonUtils.percentageMatch(10d, 0d));
+	}
+	
 	
 }

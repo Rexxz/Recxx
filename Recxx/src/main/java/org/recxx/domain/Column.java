@@ -1,27 +1,26 @@
 package org.recxx.domain;
 
-import org.apache.commons.collections.KeyValue;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
-public class Column<K, V> implements KeyValue {
+public class Column {
 
-	private final K key;
-	private final V value;
+	private final String name;
+	private final Class<?> type;
 	
-	public Column(K key, V value) {
-		this.key = key;
-		this.value = value;
+	public Column(String name, Class<?> type) {
+		this.name = name;
+		this.type = type;
 	}
 	
-	public K getKey() {
-		return key;
+	public String getName() {
+		return name;
 	}
 
-	public V getValue() {
-		return value;
+	public Class<?> getType() {
+		return type;
 	}
 	
 	@Override

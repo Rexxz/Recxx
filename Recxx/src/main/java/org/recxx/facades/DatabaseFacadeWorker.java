@@ -11,9 +11,10 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.io.FileUtils;
 import org.recxx.AbstractRecFeed;
 import org.recxx.Recxx;
-import org.recxx.utils.FileUtils;
+import org.recxx.utils.SystemUtils;
 
 /**
  * This class represents a facade on to a Database for use as a data source when
@@ -110,7 +111,8 @@ public class DatabaseFacadeWorker extends AbstractRecFeed implements RecxxWorker
         File file = new File(sql);
         if (file.exists()) {
         	LOGGER.log(Level.INFO, "File based SQL discovered, will attempt to load file");
-        	sql = FileUtils.readFileAsString(file);
+        	sql = FileUtils.readFileToString(file);
+        	sql = SystemUtils.replaceSystemProperties(sql);
         }
         LOGGER.log(Level.INFO, "Running sql :" + sql);
         rs = statment.executeQuery(sql);

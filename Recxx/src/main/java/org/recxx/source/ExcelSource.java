@@ -3,8 +3,8 @@ package org.recxx.source;
 import java.util.List;
 import java.util.Set;
 
-import org.recxx.domain.Key;
 import org.recxx.domain.Column;
+import org.recxx.domain.Key;
 
 public class ExcelSource implements Source<Key> {
 
@@ -22,7 +22,7 @@ public class ExcelSource implements Source<Key> {
 		return null;
 	}
 
-	public List<Column<String, Class<?>>> getColumns() {
+	public List<Column> getColumns() {
 		return null;
 	}
 

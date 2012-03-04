@@ -1,30 +1,21 @@
 package org.recxx.utils;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
-import java.util.List;
 
-import org.apache.commons.beanutils.converters.BigDecimalConverter;
+import org.apache.commons.beanutils.ConvertUtilsBean;
 
 public class SystemUtils {
 
 	public static final String ENV_VARIABLE_START = "${";
 	public static final String ENV_VARIABLE_END = "}";
 
-	public static String replaceSystemProperties(String property) {
-		while (property != null && property.contains(SystemUtils.ENV_VARIABLE_START) && property.contains(SystemUtils.ENV_VARIABLE_END)) {
-			property = replaceSystemProperty(property);
+	public static String replaceSystemProperties(String string) {
+		while (string != null && string.contains(ENV_VARIABLE_START) && string.contains(ENV_VARIABLE_END)) {
+			string = replaceSystemProperty(string);
 		}
-		return property;
+		return string;
 	}
 
-	public static List<String> replaceSystemProperties(List<String> properties) {
-		for (String property : properties) {
-			property = SystemUtils.replaceSystemProperties(property);
-		}
- 		return properties;
-	}
-	
 	private static String replaceSystemProperty(String property) {
 		String systemPropertyName = property.substring(property.indexOf(ENV_VARIABLE_START) + 2, property.indexOf(ENV_VARIABLE_END));
 		String systemPropertyRequired = System.getProperty(systemPropertyName);
@@ -33,10 +24,10 @@ public class SystemUtils {
 	}
 	
 	public static BigDecimal memoryUsed() {
-		BigDecimalConverter bdc = new BigDecimalConverter();
-		BigDecimal use = (BigDecimal)bdc.convert(BigDecimal.class, Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
-		BigDecimal max = (BigDecimal)bdc.convert(BigDecimal.class, Runtime.getRuntime().maxMemory());
-		return use.divide(max, 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));		
+		ConvertUtilsBean convertUtilsBean = new ConvertUtilsBean();
+		BigDecimal used = (BigDecimal)convertUtilsBean.convert(Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory(), BigDecimal.class);
+		BigDecimal max = (BigDecimal)convertUtilsBean.convert(Runtime.getRuntime().maxMemory(), BigDecimal.class);
+		return used.divide(max, 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));		
 	}
 
 	

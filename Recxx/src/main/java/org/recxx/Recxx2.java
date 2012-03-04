@@ -41,10 +41,10 @@ public class Recxx2 {
 		this.configuration = config;
 	}
 
-	public void execute() {
+	public Summary execute() {
 		
 		//TODO Move to ConvertUtilsBean to allow per source specific conversions
-		DateTimeConverter dtConverter = new DateConverter();
+		DateTimeConverter dtConverter = new DateConverter(null);
 		dtConverter.setPatterns(configuration.getStringArray("dateFormats"));
 		ConvertUtils.register(dtConverter, Date.class);
 		
@@ -71,17 +71,19 @@ public class Recxx2 {
         LOGGER.info("Sources complete " + ((System.currentTimeMillis() - t) / 1000d) +"s");
 		LOGGER.info("Memory used: " + SystemUtils.memoryUsed() + "%");
 		executor.shutdown();
-	      
+	    
+		Summary summary = null;
         try {
-			compare(task1.get(), task2.get(), destinations);
+			summary = compare(task1.get(), task2.get(), destinations);
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		} catch (ExecutionException e) {
 			e.printStackTrace();
 		}
+		return summary;
     }
 
-	private void compare(Source<Key> source1,
+	private Summary compare(Source<Key> source1,
 						Source<Key> source2, 
 						List<Destination> destinations) {
 
@@ -98,6 +100,8 @@ public class Recxx2 {
 		boolean ignoreCase = configuration.configureIgnoreCase();
 		BigDecimal smallestAbsoluteValue = configuration.configureSmallestAbsoluteValue();
 		BigDecimal toleranceLevel = configuration.configureToleranceLevel();
+		List<String> compareColumns1 = source1.getCompareColumns();
+		List<String> compareColumns2 = source2.getCompareColumns();
 
 		for (Key key : keySet1) {
 
@@ -112,41 +116,49 @@ public class Recxx2 {
 			
 			for (int i = 0; i < row1.size(); i++) {
 				
-				Object field1 = row1.get(i);
-				if (keyExistsInBothSources) {
-					Object field2 = row2.get(i);
-					ComparisonResult comparison = ComparisonUtils.compare(field1, 
-																			field2,
-																			smallestAbsoluteValue,
-																			toleranceLevel,
-																			ignoreCase); 
-					if (comparison.isDifferent()) {
+				if(compareColumns1.contains(source1.getColumns().get(i).getName()) ||
+						compareColumns1.contains(RecxxConfiguration.ALL_COLUMNS)) {
+					
+					Object field1 = row1.get(i);
+					
+					if (keyExistsInBothSources  &&
+							(compareColumns2.contains(source1.getColumns().get(i).getName())  ||
+							compareColumns2.contains(RecxxConfiguration.ALL_COLUMNS))) {
+						
+						Object field2 = row2.get(i);
+						ComparisonResult comparison = ComparisonUtils.compare(field1, 
+																				field2,
+																				smallestAbsoluteValue,
+																				toleranceLevel,
+																				ignoreCase); 
+						if (comparison.isDifferent()) {
+							Difference difference = new Difference.Builder()
+								.alias1(source1.getAlias())
+								.alias2(source2.getAlias())
+								.column(source1.getColumns().get(i))
+								.comparison(comparison)
+								.field1(field1)
+								.field2(field2)
+								.key(key)
+								.keyColumns(source1.getKeyColumns())
+								.build();
+							writeDifference(destinations, difference);
+							matchedRow = false;
+						}
+					}
+					else  {
 						Difference difference = new Difference.Builder()
 							.alias1(source1.getAlias())
 							.alias2(source2.getAlias())
 							.column(source1.getColumns().get(i))
-							.comparison(comparison)
 							.field1(field1)
-							.field2(field2)
+							.field2("Missing")
 							.key(key)
 							.keyColumns(source1.getKeyColumns())
 							.build();
 						writeDifference(destinations, difference);
 						matchedRow = false;
 					}
-				}
-				else  {
-					Difference difference = new Difference.Builder()
-						.alias1(source1.getAlias())
-						.alias2(source2.getAlias())
-						.column(source1.getColumns().get(i))
-						.field1(field1)
-						.field2("Missing")
-						.key(key)
-						.keyColumns(source1.getKeyColumns())
-						.build();
-					writeDifference(destinations, difference);
-					matchedRow = false;
 				}
             }
 			
@@ -157,10 +169,17 @@ public class Recxx2 {
         }
         
         for (Key key : keySet2) {
-			if (!keySet1.contains(key)) {
+			
+        	if (!keySet1.contains(key)) {
 				List<?> row2 = source2.getRow(key);					
+				
 				for (int i = 0; i < row2.size(); i++) {
-					if (!source2.getKeyColumns().contains(source2.getColumns().get(i).getKey())) {
+					Object columnName = source2.getColumns().get(i).getName();
+					
+					if (!source2.getKeyColumns().contains(columnName)
+							&& (compareColumns2.contains(columnName)  ||
+								compareColumns2.contains(RecxxConfiguration.ALL_COLUMNS))) {
+						
 						Object field2 = row2.get(i);
 						Difference difference = new Difference.Builder()
 							.alias1(source1.getAlias())
@@ -177,19 +196,21 @@ public class Recxx2 {
 			}
 		}
         
-        writeSummary(destinations, new Summary.Builder()
+        Summary summary = new Summary.Builder()
             .alias1Count(keySet1.size())
             .alias2Count(keySet2.size())
             .alias1(source1.getAlias())
             .alias2(source2.getAlias())
             .matchCount(matchCount)
-            .build()
-        );
+            .build();
+		writeSummary(destinations, summary);
         
         close(destinations);
 
         LOGGER.info("Memory used: " + SystemUtils.memoryUsed() + "%");
         LOGGER.info("Compare complete in " + ((System.currentTimeMillis() - t) / 1000d) +"s");
+        
+        return summary;
 	            
 	}
 

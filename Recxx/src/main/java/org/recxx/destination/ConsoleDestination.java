@@ -28,6 +28,7 @@ public class ConsoleDestination extends AbstractDestination {
 	}
 
 	public void writeSummary(Summary summary) {
+		setSummary(summary);
 		System.err.println(defaultSummary(summary));
 	}
 

@@ -20,14 +20,15 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.log4j.Logger;
 import org.recxx.domain.Column;
 import org.recxx.factory.DestinationFactory;
-import org.recxx.factory.FileSourceFactory;
 import org.recxx.factory.SourceFactory;
 import org.recxx.source.FileSource;
 import org.recxx.utils.ComparisonUtils;
 
 public class RecxxConfiguration extends AbstractConfiguration {
 
-	private static Logger LOGGER = Logger.getLogger(FileSourceFactory.class);
+	public static final String ALL_COLUMNS = "*";
+
+	private static Logger LOGGER = Logger.getLogger(RecxxConfiguration.class);
 
 	private CombinedConfiguration config;
 	
@@ -119,7 +120,8 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	}
 
 	public BigDecimal configureToleranceLevel(){
-		return getBigDecimal("toleranceLevel", ComparisonUtils.DEFAULT_TOLERANCE_PERCENTAGE);
+		return getBigDecimal("toleranceLevelPercent", ComparisonUtils.DEFAULT_TOLERANCE_PERCENTAGE)
+			.divide(new BigDecimal(100));
 	}
 	
 	public BigDecimal configureSmallestAbsoluteValue(){
@@ -131,7 +133,11 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	}
 
 	public List<String> configureColumnsToCompare(String alias) {
-		return getStrings(alias + ".columnsToCompare");
+		List<String> columnsToCompare = getStrings(alias + ".columnsToCompare");
+		if (columnsToCompare.isEmpty()) {
+			columnsToCompare.add(ALL_COLUMNS);
+		}
+		return columnsToCompare;
 	}
 	
 	public List<String> configureKeyColumns(String alias) {
@@ -143,14 +149,14 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		return keyColumns;
 	}
 
-	public List<Column<String, Class<?>>> configureColumns(String alias, Map<String, Class<?>> classAbbreviationMap) {
+	public List<Column> configureColumns(String alias, Map<String, Class<?>> classAbbreviationMap) {
 		List<String> columns = getStrings(alias + ".columns");
 		if (columns.isEmpty()) {
 			throw new IllegalArgumentException("'" + alias + ".columns' not specified in configuration, " +
 					"this component must have columns, configured using '<alias>.columns=<name>|<type>, <name>|<type>...'," +
 					" and columns must match across sources for comparison to function");
 		}
-		List<Column<String, Class<?>>> columnDefinitions = new ArrayList<Column<String, Class<?>>>();
+		List<Column> columnDefinitions = new ArrayList<Column>();
 		for (String column : columns) {
 			String[] split = column.split("\\" + FileSource.DEFAULT_COLUMN_NAME_TYPE_SEPARATOR);
 			if (split.length !=2) {
@@ -165,7 +171,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 						" column definition '" + column + "' received and no matching class definition found for '" + split[1] + 
 						"' in " + classAbbreviationMap.toString());
 			}
-			columnDefinitions.add(new Column<String, Class<?>>(split[0], clazz));
+			columnDefinitions.add(new Column(split[0], clazz));
 		}
 		return columnDefinitions;
 	}

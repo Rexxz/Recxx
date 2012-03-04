@@ -8,7 +8,7 @@ import org.recxx.domain.ComparisonResult;
 
 public class ComparisonUtils {
 	
-	public static final BigDecimal DEFAULT_TOLERANCE_PERCENTAGE = BigDecimal.valueOf(0.01);
+	public static final BigDecimal DEFAULT_TOLERANCE_PERCENTAGE = BigDecimal.valueOf(0.0001);  // 0.01%
 	public static final BigDecimal DEFAULT_SMALLEST_ABSOLUTE_VALUE = BigDecimal.valueOf(0.00001);
 
 	public static BigDecimal absoluteDifference(BigDecimal o1, BigDecimal o2) {
@@ -17,7 +17,17 @@ public class ComparisonUtils {
 
 	public static BigDecimal percentageDifference(BigDecimal o1, BigDecimal o2) {
 		BigDecimal original = o1.compareTo( BigDecimal.ZERO ) == 0  ? o2 : o1;
-		return ((o2.subtract(o1)).divide(original, 6, RoundingMode.HALF_UP)).multiply( BigDecimal.valueOf(100) );
+		return (o2.subtract(o1)).divide(original, 6, RoundingMode.HALF_UP);
+	}
+
+	public static BigDecimal percentageMatch(Number o1, Number o2) {
+		return percentageMatch((BigDecimal)ConvertUtils.convert(o1, BigDecimal.class), 
+								(BigDecimal)ConvertUtils.convert(o2, BigDecimal.class));
+	}
+	
+	public static BigDecimal percentageMatch(BigDecimal o1, BigDecimal o2) {
+		if (o2.compareTo(BigDecimal.ZERO) == 0) return BigDecimal.ZERO;
+		return (o1).divide(o2, 6, RoundingMode.HALF_UP);
 	}
 	
 	public static ComparisonResult compare(Object o1, Object o2) {

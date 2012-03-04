@@ -1,16 +1,15 @@
 package org.recxx.domain;
 
-import java.text.DecimalFormat;
+import java.math.BigDecimal;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.recxx.utils.ComparisonUtils;
 
 public class Summary {
 	
-	private static final DecimalFormat PERCENT_FORMAT = new DecimalFormat("#.00%");
-
 	private final String alias1;
 	private final String alias2;
 	private final Integer alias1Count;
@@ -83,20 +82,12 @@ public class Summary {
 		return alias2;
 	}
 	
-	public String getAlias1MatchPercentage() {
-		Double result = 0d;
-		if (matchCount != 0 && alias1Count != 0 ) {
-			result = matchCount.doubleValue() / alias1Count.doubleValue();
-		}
-		return PERCENT_FORMAT.format(result);
+	public BigDecimal getAlias1MatchPercentage() {
+		return ComparisonUtils.percentageMatch(matchCount, alias1Count);
 	}
 
-	public String getAlias2MatchPercentage() {
-		Double result = 0d;
-		if (matchCount != 0 && alias2Count != 0 ) {
-			result = matchCount.doubleValue() / alias2Count.doubleValue();
-		}
-		return PERCENT_FORMAT.format(result);
+	public BigDecimal getAlias2MatchPercentage() {
+		return ComparisonUtils.percentageMatch(matchCount, alias2Count);
 	}
 	
 	@Override
