@@ -11,9 +11,6 @@ import junit.framework.Assert;
 
 import org.junit.Test;
 
-/**
- * Created by Shaine Ismail. User: sismail Date: 23/08/2011 Time: 18:28 Copyright SNI-Services ltd
- */
 public class ArrayUtilsTest {
 
 	@Test
