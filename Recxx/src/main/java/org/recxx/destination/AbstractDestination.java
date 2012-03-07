@@ -58,8 +58,8 @@ public abstract class AbstractDestination implements Destination {
 		else {
 			sb.append(difference.getField2()).append(delimiter);
 		}
-		if (Number.class.isAssignableFrom(difference.getField1().getClass()) && 
-				Number.class.isAssignableFrom(difference.getField2().getClass())) {
+		if (difference.getField1() != null && Number.class.isAssignableFrom(difference.getField1().getClass()) && 
+				difference.getField2() != null && Number.class.isAssignableFrom(difference.getField2().getClass())) {
 			sb.append(PERCENT_FORMAT.format(difference.getComparison().getPercentageDifference()))
 			.append(delimiter)
 			.append(difference.getComparison().getAbsoluteDifference());
