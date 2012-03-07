@@ -116,14 +116,14 @@ public class Recxx2 {
 			
 			for (int i = 0; i < row1.size(); i++) {
 				
-				if(compareColumns1.contains(source1.getColumns().get(i).getName()) ||
-						compareColumns1.contains(RecxxConfiguration.ALL_COLUMNS)) {
+				if(compareColumns1.contains(RecxxConfiguration.ALL_COLUMNS) ||
+						compareColumns1.contains(source1.getColumns().get(i).getName())) {
 					
 					Object field1 = row1.get(i);
 					
-					if (keyExistsInBothSources  &&
-							(compareColumns2.contains(source1.getColumns().get(i).getName())  ||
-							compareColumns2.contains(RecxxConfiguration.ALL_COLUMNS))) {
+					if (keyExistsInBothSources  && i < row2.size() &&
+							(compareColumns2.contains(RecxxConfiguration.ALL_COLUMNS) ||
+								compareColumns2.contains(source1.getColumns().get(i).getName()))) {
 						
 						Object field2 = row2.get(i);
 						ComparisonResult comparison = ComparisonUtils.compare(field1, 

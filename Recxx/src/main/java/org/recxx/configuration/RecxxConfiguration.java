@@ -212,6 +212,18 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		return sourceAliases;
 	}
 	
+	public boolean configureFormatComparison(String alias) {
+		return getBoolean(alias + ".formatComparison", false);
+	}
+
+	public List<String> configureOmitSheets(String alias) {
+		List<String> omitSheets = getStrings(alias + ".omitSheets");
+		if (omitSheets == null || omitSheets.isEmpty()) {
+			omitSheets = new ArrayList<String>();
+		}
+		return omitSheets;
+	}
+
 	@Override
 	protected void addPropertyDirect(String key, Object value) {
 		config.addProperty(key, value);					
@@ -231,6 +243,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	public int hashCode() {
 		return HashCodeBuilder.reflectionHashCode(this, false);
 	}
+
 
 	
 
