@@ -16,8 +16,8 @@ public class CachedFileSource extends FileSource {
 
 	private final Map<Key, List<?>> dataMap = new HashMap<Key, List<?>>();
 	
-	public CachedFileSource(String name, FileMetaData metaData) {
-		super(name, metaData);
+	public CachedFileSource(String alias, FileMetaData metaData) {
+		super(alias, metaData);
 	}
 	
 	public Source<Key> call() {
