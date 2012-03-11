@@ -1,0 +1,23 @@
+Key: Id,column,source1.value,source2.value,% Diff,ABS Diff
+100,Id,100,Missing,,
+100,Name,Name10,Missing,,
+100,Balance,1000.0,Missing,,
+100,Date,Mon Jan 01 00:00:00 GMT 2007,Missing,,
+2,Balance,199.999,200.0,0.000500%,0.001
+3,Balance,null,300.0,,
+3,Date,Mon Jan 01 00:00:00 GMT 2007,null,,
+1,Balance,100.0,101.0,1.000000%,1.0
+1,Date,Tue Jan 02 00:00:00 GMT 2007,Mon Jan 01 00:00:00 GMT 2007,,
+10,Name,Missing,Name10,,
+10,Balance,Missing,1000.0,,
+10,Date,Missing,Mon Jan 01 00:00:00 GMT 2007,,
+
+
+======================
+Reconciliation Summary
+======================
+source1 rows,10
+source2 rows,10
+source1 matched source2,6
+source1 matched source2,60.00%
+source2 matched source1,60.00%
