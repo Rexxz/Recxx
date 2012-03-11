@@ -44,21 +44,22 @@ public class Recxx2Test {
 	}
 
 	@Test
-	public void filesDifferAndFailsReconcileZeroPercentToleranceCaseDifference() throws Exception {
-		String expectedOutputFile = Recxx2Test.class.getResource("expected0.00PercentToleranceCaseDiff.csv").getPath();
+	public void filesDifferAndFailsReconcileOnePercentTolerance() throws Exception {
+		String expectedOutputFile = Recxx2Test.class.getResource("expected1.00PercentTolerance.csv").getPath();
 		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
-		fileConfig.setProperty("ignoreCase", "true");
-		fileConfig.setProperty("toleranceLevelPercent", "0.00");
+		fileConfig.setProperty("toleranceLevelPercent", "1.00");
 		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
 		failsToReconcile(fileConfig);
 		FileAssert.assertEquals(expectedOutputFile, actualOutputFile);
 	}
 	
 	@Test
-	public void filesDifferAndFailsReconcileOnePercentTolerance() throws Exception {
-		String expectedOutputFile = Recxx2Test.class.getResource("expected1.00PercentTolerance.csv").getPath();
+	public void filesDifferAndFailsReconcileZeroPercentToleranceCaseDifference() throws Exception {
+		String expectedOutputFile = Recxx2Test.class.getResource("expected0.00PercentToleranceCaseDiff.csv").getPath();
 		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
-		fileConfig.setProperty("toleranceLevelPercent", "1.00");
+		fileConfig.setProperty("source1.filePath", Recxx2Test.class.getResource("source1_10_upper.csv").getPath());
+		fileConfig.setProperty("ignoreCase", "true");
+		fileConfig.setProperty("toleranceLevelPercent", "0.00");
 		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
 		failsToReconcile(fileConfig);
 		FileAssert.assertEquals(expectedOutputFile, actualOutputFile);
