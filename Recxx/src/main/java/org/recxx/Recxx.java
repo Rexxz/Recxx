@@ -96,6 +96,7 @@ import org.recxx.writer.CSVLogger;
  * columns</li>
  * </ul>
  */
+@SuppressWarnings("all")
 public class Recxx extends AbstractRecFeed implements Runnable {
 
 	private static final String m_appName = "rec";

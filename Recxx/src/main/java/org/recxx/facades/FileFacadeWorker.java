@@ -24,6 +24,7 @@ import org.recxx.utils.ArrayUtils;
  * This class represents a facade on to a file for use as a data source when
  * reconciling two sources of data
  */
+@SuppressWarnings("all")
 public class FileFacadeWorker extends AbstractRecFeed implements RecxxWorker {
     private Recxx m_Rec = null;
     private String m_ColumnNames = "";

@@ -18,8 +18,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.recxx.configuration.RecxxConfiguration;
 import org.recxx.domain.Column;
+import org.recxx.domain.Default;
 import org.recxx.domain.ExcelCoordinates;
 import org.recxx.domain.ExcelFileMetaData;
 import org.recxx.domain.ExcelType;
@@ -151,7 +151,7 @@ public class ExcelSource implements Source<Key> {
 	}
 
 	public List<String> getCompareColumns() {
-		return Arrays.asList(RecxxConfiguration.ALL_COLUMNS); //?
+		return Arrays.asList(Default.ALL_COLUMNS); //?
 	}
 
 }

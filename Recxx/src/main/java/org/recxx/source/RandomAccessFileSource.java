@@ -31,7 +31,7 @@ public class RandomAccessFileSource extends FileSource {
 		int i = 0;
 		while (byteBuffer.hasRemaining()) {
 			char c = (char) byteBuffer.get();
-			if ( c == fileMetaData.getLineDelimiter() || !byteBuffer.hasRemaining() ) {
+			if ( c == fileMetaData.getLineDelimiter().charAt(0) || !byteBuffer.hasRemaining() ) {
 				if (fileMetaData.isIgnoreHederRow() && isFirstRow) {
 					isFirstRow = false;
 				}
@@ -52,7 +52,6 @@ public class RandomAccessFileSource extends FileSource {
 				line.append(c);
 			}
 		}
-		LOGGER.info("Processed file: " + fileMetaData.getFilePath());
 		return this;
 	}
 

@@ -18,7 +18,9 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.log4j.Logger;
+import org.recxx.destination.ConsoleDestination;
 import org.recxx.domain.Column;
+import org.recxx.domain.Default;
 import org.recxx.factory.DestinationFactory;
 import org.recxx.factory.SourceFactory;
 import org.recxx.source.FileSource;
@@ -26,12 +28,14 @@ import org.recxx.utils.ComparisonUtils;
 
 public class RecxxConfiguration extends AbstractConfiguration {
 
-	public static final String ALL_COLUMNS = "*";
-
 	private static Logger LOGGER = Logger.getLogger(RecxxConfiguration.class);
 
 	private CombinedConfiguration config;
 	
+	public RecxxConfiguration() throws ConfigurationException {
+		this(new PropertiesConfiguration());
+	}
+
 	public RecxxConfiguration(String filePath) throws ConfigurationException {
 		this(new PropertiesConfiguration(filePath));
 	}
@@ -74,24 +78,35 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		}
 	}
 	
+	public List<String> getStrings(String key, String defaultKey) {
+		List<String> strings = getStrings(key);
+		if (strings.isEmpty()) {
+			strings = getStrings(defaultKey);
+		}
+		return strings;
+	}
+	
 	public String configureDelimiter(String alias) {
 		return getString(alias + ".delimiter", FileSource.DEFAULT_DELIMITER);
 	}
 
 	public List<String> configureDateFormats(String alias) {
-		return getStrings(alias + ".dateFormat");
+		List<String> dateFormats = getStrings(alias + ".dateFormats", "dateFormats");
+		if (dateFormats.isEmpty()) {
+			LOGGER.warn("'" + alias + ".dateFormats' does not exist in configuration, " +
+			" and no overall 'dateFormats' is specified, conversion errors may occur");
+		}
+		return dateFormats;
 	}
 	
-	public char configureLineDelimiter(String alias) {
+	public String configureLineDelimiter(String alias) {
 		String lineDelimiterString = getString(alias + ".lineDelimiter");
-		char lineDelimiter;
+		String lineDelimiter;
 		if (lineDelimiterString == null || lineDelimiterString.equals("")) {
-			LOGGER.warn("'" + alias + ".lineDelimiter' does not exist in configuration , " +
-					"defaulting to system lineDelimiter defined by System.getProperty(\"line.separator\")");
-			lineDelimiter = System.getProperty("line.separator").charAt(0);
+			lineDelimiter = System.getProperty("line.separator");
 		}
 		else {
-			lineDelimiter = lineDelimiterString.charAt(0);
+			lineDelimiter = lineDelimiterString;
 		}
 		return lineDelimiter;
 	}
@@ -135,7 +150,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	public List<String> configureColumnsToCompare(String alias) {
 		List<String> columnsToCompare = getStrings(alias + ".columnsToCompare");
 		if (columnsToCompare.isEmpty()) {
-			columnsToCompare.add(ALL_COLUMNS);
+			columnsToCompare.add(Default.ALL_COLUMNS);
 		}
 		return columnsToCompare;
 	}
@@ -188,8 +203,8 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	public List<String> configureDestinationAliases() {
 		List<String> destinationAliases = getStrings("destinations");
 		if (destinationAliases == null || destinationAliases.isEmpty()) {
-			throw new IllegalArgumentException("'destinations' specified incorrectly or missing in configuration, " +
-				"configuration requires specification using 'destinations=<alias1>, <alias2>'");
+			destinationAliases = new ArrayList<String>();
+			destinationAliases.add("console");
 		}
 		return destinationAliases;
 	}
@@ -197,8 +212,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	public String configureDestinationType(String alias, Map<Class<?>, DestinationFactory> destinationFactoryMap) {
 		String destinationType = getString(alias + ".type");
 		if (destinationType == null) {
-			throw new IllegalArgumentException("'" + alias + ".type' not specified in configuration, " +
-					"configuration requires one of the following values: " + destinationFactoryMap.keySet());
+			destinationType = ConsoleDestination.class.getName();
 		}
 		return destinationType;
 	}
@@ -227,6 +241,11 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	@Override
 	protected void addPropertyDirect(String key, Object value) {
 		config.addProperty(key, value);					
+	}
+	
+	@Override
+	public void setProperty(String key, Object value) {
+		config.setProperty(key, value);
 	}
 
 	@Override

@@ -8,7 +8,6 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.logging.Logger;
 
 /**
  * <p>
@@ -79,8 +78,6 @@ public class CSVLogger {
 
 	private static final String QUOTE = "\"";
 
-	private static final Logger LOGGER = Logger.getLogger(CSVLogger.class.getName());
-
 	public static final String DEFAULT_DELIMITER = ",";
 
 	public static final String DEFAULT_NULL_STRING = "";
@@ -148,7 +145,6 @@ public class CSVLogger {
 	public void open() throws IOException {
 		file = new File(filename);
 		writer = bufferedWriterManager.open(file);
-		LOGGER.info("Created csv file " + file.getPath());
 	}
 
 	public void close() throws IOException {

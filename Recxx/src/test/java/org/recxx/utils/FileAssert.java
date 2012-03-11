@@ -7,54 +7,46 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import org.recxx.domain.Default;
+
 import junit.framework.Assert;
+import junit.framework.AssertionFailedError;
 
 public class FileAssert {
 
-	private static String processOneLine(int lineNumber,
+	private static void processLine(int lineNumber,
 										BufferedReader expectedData, 
 										BufferedReader actualData)
 										throws IOException {
 
-		String problem = null;
+		StringBuilder sb = new StringBuilder();
 		String expectedLine = expectedData.readLine();
 		if (!actualData.ready()) {
-			problem = "at line " + lineNumber + ", expected:\n" + expectedLine
-					+ "\n"
-					+ "but actual file was not ready for reading at this line.";
-		} else {
+			sb.append("at line ").append(lineNumber).append(", expected:").append(Default.LINE_DELIMITER)
+				.append(expectedLine).append(Default.LINE_DELIMITER)
+				.append("but actual file was not available for read operation at this line");
+			Assert.fail(sb.toString());
+		} 
+		else {
 			String actualLine = actualData.readLine();
 			if (!expectedLine.equals(actualLine)) {
-
-				problem = "at line " + lineNumber
-						+ " there was a mismatch.  Expected:\n";
-				int maxLen = expectedLine.length();
-				if (expectedLine.length() > actualLine.length()) {
-					maxLen = actualLine.length();
-				}
-				int startOffset = 0;
-				for (int i = 0; i < maxLen; i++) {
-					if (expectedLine.charAt(i) != actualLine.charAt(i)) {
-						startOffset = i;
-						break;
-					}
-				}
-				problem += expectedLine.substring(startOffset) + "\n"
-						+ "actual was:\n" + actualLine.substring(startOffset)
-						+ "\n";
+				sb.append("at line ").append(lineNumber)
+					.append(" there was a mismatch:").append(Default.LINE_DELIMITER)
+					.append("Expect: ").append(expectedLine).append(Default.LINE_DELIMITER)
+					.append("Actual: ").append(actualLine).append(Default.LINE_DELIMITER);
+				Assert.fail(sb.toString());
 			}
 		}
-		return problem;
 	}
 
 	public static void assertEquals(BufferedReader expected, BufferedReader actual) throws Exception {
 		Assert.assertNotNull(expected);
 		Assert.assertNotNull(actual);
-		String problem = null;
+		boolean problem = false;
 		try {
 			int lineCounter = 0;
-			while (expected.ready() && problem == null) {
-				problem = processOneLine(lineCounter, expected, actual);
+			while (expected.ready() && !problem) {
+				processLine(lineCounter, expected, actual);
 				lineCounter++;
 			}
 		} finally {
@@ -62,9 +54,6 @@ public class FileAssert {
 			actual.close();
 		}
 
-		if (problem != null) {
-			Assert.fail(problem);
-		}
 	}
 
 	public static void assertEquals(InputStream expected, File actual)
@@ -78,6 +67,10 @@ public class FileAssert {
 		assertEquals(expectedData, actualData);
 	}
 
+	public static void assertEquals(String expectedFilePath, String actualFilePath) throws Exception {
+		assertEquals(new File(expectedFilePath), new File(actualFilePath));
+	}
+
 	public static void assertEquals(File expected, File actual)
 			throws Exception {
 		Assert.assertNotNull(expected);
@@ -88,6 +81,13 @@ public class FileAssert {
 
 		BufferedReader expectedData = new BufferedReader(new InputStreamReader(new FileInputStream(expected)));
 		BufferedReader actualData = new BufferedReader(new InputStreamReader(new FileInputStream(actual)));
-		assertEquals(expectedData, actualData);
+		try {
+			assertEquals(expectedData, actualData);
+		} catch (AssertionFailedError e) {
+			StringBuilder sb = new StringBuilder(e.getMessage());
+			sb.append("Expect file: ").append(expected.getPath()).append(Default.LINE_DELIMITER)
+			  .append("Actual file: ").append(actual.getPath()).append(Default.LINE_DELIMITER);
+			throw new AssertionFailedError(sb.toString());
+		}
 	}
 }

@@ -1,6 +1,7 @@
 package org.recxx.domain;
 
 import java.math.BigDecimal;
+import java.text.DecimalFormat;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -89,7 +90,26 @@ public class Summary {
 	public BigDecimal getAlias2MatchPercentage() {
 		return ComparisonUtils.percentageMatch(matchCount, alias2Count);
 	}
-	
+
+	public String toOutputString(){
+		return toOutputString(Default.COMMA, Default.LINE_DELIMITER, Default.PERCENT_FORMAT);
+	}
+
+	public String toOutputString(String delimiter, String lineDelimiter, DecimalFormat percentFormat) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(lineDelimiter)
+		.append(lineDelimiter)
+		.append("======================").append(lineDelimiter)
+		.append("Reconciliation Summary").append(lineDelimiter)
+		.append("======================").append(lineDelimiter)
+		.append(getAlias1()).append(" rows").append(delimiter).append(getAlias1Count()).append(lineDelimiter)
+		.append(getAlias2()).append(" rows").append(delimiter).append(getAlias2Count()).append(lineDelimiter)
+		.append(getAlias1()).append(" matched ").append(getAlias2()).append(delimiter).append(getMatchCount()).append(lineDelimiter)
+		.append(getAlias1()).append(" matched ").append(getAlias2()).append(delimiter).append(Default.PERCENT_FORMAT.format(getAlias1MatchPercentage())).append(lineDelimiter)
+		.append(getAlias2()).append(" matched ").append(getAlias1()).append(delimiter).append(Default.PERCENT_FORMAT.format(getAlias2MatchPercentage())).append(lineDelimiter);
+		return sb.toString();
+	}
+
 	@Override
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);

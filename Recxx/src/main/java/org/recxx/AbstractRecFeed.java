@@ -26,6 +26,7 @@ import org.recxx.utils.SuperProperties;
  * ResultSetMetaData All FacadeWorker class's should extend from this and make
  * a concrete implementation.
  */
+@SuppressWarnings("all")
 public abstract class AbstractRecFeed {
 
     Logger LOGGER = Logger.getLogger(AbstractRecFeed.class.getName());
@@ -38,7 +39,7 @@ public abstract class AbstractRecFeed {
     protected boolean keyColumnPositionsSet = false;
     protected List<Integer> keyColumnPositions;
     protected String[] columns;
-    protected HashMap data;
+	protected HashMap data;
 
     public DecimalFormat decimalFormatter = new DecimalFormat("##,##0");
 
@@ -132,7 +133,7 @@ public abstract class AbstractRecFeed {
         for (int keyColumnPosition : keyColumnPositions) {
             Object o = row.get(keyColumnPosition);
             if (o != null) {
-                sb.append(o.toString()).append("¶");
+                sb.append(o.toString()).append("ï¿½");
             }
         }
         return sb.toString();
