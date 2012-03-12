@@ -98,12 +98,14 @@ public class Recxx2Test {
 		fileConfig.setProperty("source1.delimiter", ",");
 		fileConfig.setProperty("source1.columns", Arrays.asList("Id|Integer", "Name|String", "Balance|Double", "Date|Date"));
 		fileConfig.setProperty("source1.keyColumns", "Id");
+		fileConfig.setProperty("source1.lineDelimiter", "\n");
 
 		fileConfig.setProperty("source2.type", CachedFileSource.class.getName());
 		fileConfig.setProperty("source2.filePath", Recxx2Test.class.getResource("source2_10.csv").getPath());
 		fileConfig.setProperty("source2.delimiter", ",");
 		fileConfig.setProperty("source2.columns", Arrays.asList("Id|Integer", "Name|String", "Balance|Double", "Date|Date"));
 		fileConfig.setProperty("source2.keyColumns", "Id");
+		fileConfig.setProperty("source2.lineDelimiter", "\n");
 		
 		fileConfig.setProperty("destinations", "csvFile, console");
 		fileConfig.setProperty("csvFile.type", CsvDestination.class.getName());
