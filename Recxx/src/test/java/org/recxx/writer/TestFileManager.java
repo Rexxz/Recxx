@@ -5,9 +5,11 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import org.apache.commons.io.FileUtils;
+
 public class TestFileManager {
 
-	private final String testFileName = "csvLoggerTestFile.csv";
+	private final String testFileName = FileUtils.getTempDirectoryPath() + "csvLoggerTestFile.csv";
 
 	public String getTestFileName() {
 		return testFileName;
