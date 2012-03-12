@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.recxx.domain.Default;
 import org.recxx.domain.FileMetaData;
 import org.recxx.domain.Key;
 
@@ -23,19 +24,28 @@ public class CachedFileSource extends FileSource {
 	public Source<Key> call() {
 		StringBuilder line = new StringBuilder();
 		boolean isFirstRow = true;
+		boolean isIgnoreHeaderRow = fileMetaData.isIgnoreHederRow();
 		
 		LOGGER.info("Loading file: " + fileMetaData.getFilePath());
-		
+		boolean columnNamesNotSupplied = fileMetaData.getColumnNames().contains(Default.UNKNOWN_COLUMN_NAME);
+		if (columnNamesNotSupplied) {
+			isIgnoreHeaderRow = true;
+		}
+			
 		int i = 0;
 		while (byteBuffer.hasRemaining()) {
 			char c = (char) byteBuffer.get();
 			if ( c == fileMetaData.getLineDelimiter().charAt(0) || !byteBuffer.hasRemaining() ) {
-				if (fileMetaData.isIgnoreHederRow() && isFirstRow) {
+				if (isFirstRow && isIgnoreHeaderRow) {
+					if (columnNamesNotSupplied) {
+						List<?> columns = parseRow(line.toString(), getHeaderColumnTypes(fileMetaData.getColumns().size()));
+						fileMetaData = FileMetaData.valueOf(fileMetaData, columns);
+					}
 					isFirstRow = false;
 				}
 				else {
 					if (line.length() != 0) {
-						List<?> fields = parseRow(line.toString());
+						List<?> fields = parseRow(line.toString(), fileMetaData.getColumnTypes());
 						dataMap.put(createKey(fields), fields);
 						i++;
 						if (i % 10000 == 0) {

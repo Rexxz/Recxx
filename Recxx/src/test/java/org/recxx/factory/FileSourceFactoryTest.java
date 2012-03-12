@@ -13,7 +13,7 @@ import org.recxx.source.CachedFileSource;
 
 public class FileSourceFactoryTest {
 
-	private static final File FILE = new File(System.getProperty("user.dir"), "test.txt");
+	private static final File FILE = new File(FileUtils.getTempDirectory(), "test.txt");
 	
 	private static final String TEST_DATA = "Id, Name" + System.getProperty("line.separator")
 												+ "1,Name1" + System.getProperty("line.separator")

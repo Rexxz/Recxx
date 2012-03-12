@@ -133,7 +133,7 @@ public abstract class AbstractRecFeed {
         for (int keyColumnPosition : keyColumnPositions) {
             Object o = row.get(keyColumnPosition);
             if (o != null) {
-                sb.append(o.toString()).append("�");
+                sb.append(o.toString()).append("\u00B6");
             }
         }
         return sb.toString();

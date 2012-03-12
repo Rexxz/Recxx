@@ -12,7 +12,7 @@ public class Key implements CharSequence, Serializable {
 
 	static final long serialVersionUID = 1L;
 	
-	public static final String DELIMITER = "�";
+	public static final String DELIMITER = "\u00B6";
 
 	private static final String ENCODING = "UTF-8";
 	private final int offset;
