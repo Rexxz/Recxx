@@ -6,14 +6,16 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
-import org.recxx.configuration.RecxxConfiguration;
+import org.recxx.source.Source;
 
 public class Header {
 	
-	private final RecxxConfiguration configuration;
+	private final Source<Key> source1;
+	private final Source<Key> source2;
 
-	public Header(RecxxConfiguration configuration) {
-		this.configuration = configuration;
+	public Header(Source<Key> source1, Source<Key> source2) {
+		this.source1 = source1;
+		this.source2 = source2;
 	}
 
 	public String toOutputString() {
@@ -22,16 +24,13 @@ public class Header {
 
 	public String toOutputString(String delimiter, String lineDelimiter) {
 		StringBuilder sb = new StringBuilder();
-		List<String> sources = configuration.configureSourceAliases();
-		String source1Alias = sources.get(0);
-		String source2Alias = sources.get(1);
-		List<String> keyColumns = configuration.configureKeyColumns(source1Alias);
+		List<String> keyColumns = source1.getKeyColumns();
 		for (String column : keyColumns) {
 			sb.append("Key: ").append(column).append(delimiter);
 		}
 		sb.append("column").append(delimiter)
-		.append(source1Alias).append(".value").append(delimiter)
-		.append(source2Alias).append(".value").append(delimiter)
+		.append(source1.getAlias()).append(".value").append(delimiter)
+		.append(source2.getAlias()).append(".value").append(delimiter)
 		.append("% Diff").append(delimiter).append("ABS Diff");
 		return sb.toString();
 	}

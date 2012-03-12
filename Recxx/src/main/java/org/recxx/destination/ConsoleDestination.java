@@ -4,11 +4,12 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
-import org.recxx.configuration.RecxxConfiguration;
 import org.recxx.domain.ConsoleMetaData;
 import org.recxx.domain.Difference;
 import org.recxx.domain.Header;
+import org.recxx.domain.Key;
 import org.recxx.domain.Summary;
+import org.recxx.source.Source;
 
 public class ConsoleDestination extends AbstractDestination {
 	
@@ -25,8 +26,8 @@ public class ConsoleDestination extends AbstractDestination {
 		return;
 	}
 
-	public void writeHeader(RecxxConfiguration configuration) {
-		Header header = new Header(configuration);
+	public void writeHeader(Source<Key> source1, Source<Key> source2) {
+		Header header = new Header(source1, source2);
 		System.err.println(header.toOutputString(getDelimiter(), getLineDelimiter()));
 	}
 	

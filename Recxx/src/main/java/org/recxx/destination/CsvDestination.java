@@ -11,12 +11,13 @@ import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
-import org.recxx.configuration.RecxxConfiguration;
 import org.recxx.domain.Default;
 import org.recxx.domain.Difference;
 import org.recxx.domain.FileMetaData;
 import org.recxx.domain.Header;
+import org.recxx.domain.Key;
 import org.recxx.domain.Summary;
+import org.recxx.source.Source;
 
 public class CsvDestination extends AbstractDestination {
 
@@ -39,13 +40,13 @@ public class CsvDestination extends AbstractDestination {
 		}
 	}
 	
-	public void writeHeader(RecxxConfiguration configuration) {
-		Header header = new Header(configuration);
+	public void writeHeader(Source<Key> source1, Source<Key> source2) {
+		Header header = new Header(source1, source2);
 		try {
 			writeLine(header.toOutputString(getDelimiter(), getLineDelimiter()));
 		} catch (IOException e) {
-			throw new RuntimeException("Error while attempting to write header for configuration '" 
-					+ configuration + "'", e) ;
+			throw new RuntimeException("Error while attempting to write header for sources '" 
+					+ source1 + "' & '" + source2 + "'", e) ;
 		}
 	}
 

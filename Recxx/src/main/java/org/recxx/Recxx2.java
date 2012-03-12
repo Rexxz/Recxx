@@ -70,12 +70,11 @@ public class Recxx2 {
             Set<Key> keySet2 = source2.getKeySet();
             
         open(destinations);
-        writeHeader(destinations, configuration);
+        writeHeader(destinations, source1, source2);
 
         Long t = System.currentTimeMillis();
         LOGGER.info("Starting compare");
         
-		int compareCount = 0;
 		int matchCount = 0;
 		boolean ignoreCase = configuration.configureIgnoreCase();
 		BigDecimal smallestAbsoluteValue = configuration.configureSmallestAbsoluteValue();
@@ -147,7 +146,6 @@ public class Recxx2 {
 			if (matchedRow) {
 				matchCount++;
 			}
-			compareCount++;
         }
         
         for (Key key : keySet2) {
@@ -197,9 +195,9 @@ public class Recxx2 {
 	            
 	}
 
-	private void writeHeader(List<Destination> destinations, RecxxConfiguration configuration) {
+	private void writeHeader(List<Destination> destinations, Source<Key> source1, Source<Key> source2) {
 		for (Destination destination : destinations) {
-			destination.writeHeader(configuration);		
+			destination.writeHeader(source1, source2);		
 		}
 	}
 	
