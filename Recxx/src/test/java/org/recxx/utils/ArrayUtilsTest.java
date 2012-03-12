@@ -40,7 +40,7 @@ public class ArrayUtilsTest {
 		String[] one = new String[] { "one", "two" };
 		String[] two = new String[] { "three", "four" };
 		String[] empty = new String[] {};
-		String[] result = new String[] { "one", "two", "three", "four" };
+		//String[] result = new String[] { "one", "two", "three", "four" };
 		Assert.assertEquals(one.length, ArrayUtils.mergeArrays(one, empty).length);
 		Assert.assertEquals(0, ArrayUtils.mergeArrays(empty, empty).length);
 		Assert.assertEquals(two.length, ArrayUtils.mergeArrays(empty, two).length);

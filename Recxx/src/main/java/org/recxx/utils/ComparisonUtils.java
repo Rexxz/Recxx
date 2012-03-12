@@ -8,7 +8,7 @@ import org.recxx.domain.ComparisonResult;
 
 public class ComparisonUtils {
 	
-	public static final BigDecimal DEFAULT_TOLERANCE_PERCENTAGE = BigDecimal.valueOf(0.01);  // 1%
+	public static final BigDecimal DEFAULT_TOLERANCE_PERCENTAGE = BigDecimal.ZERO;
 	public static final BigDecimal DEFAULT_SMALLEST_ABSOLUTE_VALUE = BigDecimal.valueOf(0.00001);
 
 	public static BigDecimal absoluteDifference(BigDecimal o1, BigDecimal o2) {

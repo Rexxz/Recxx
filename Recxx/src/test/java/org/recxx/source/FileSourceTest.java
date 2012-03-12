@@ -11,17 +11,14 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 
-import org.apache.commons.beanutils.ConvertUtils;
-import org.apache.commons.beanutils.converters.DateConverter;
-import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.recxx.domain.Column;
 import org.recxx.domain.FileMetaData;
 import org.recxx.domain.Key;
-import org.recxx.domain.Column;
 
 public class FileSourceTest {
 
@@ -39,7 +36,7 @@ public class FileSourceTest {
 	
 	private static List<Column> columns = Arrays.asList(col1, col2, col3, col4);
 	private static String delimiter = ",";
-	private static char lineDelimiter = System.getProperty("line.separator").charAt(0);
+	private static String lineDelimiter = System.getProperty("line.separator");
 	private static boolean ignoreHeaderRow = true;
 	private static List<String> dateFormats = Arrays.asList("EEE MMM dd HH:mm:ss z yyyy");
 
@@ -50,6 +47,7 @@ public class FileSourceTest {
 												.delimiter(delimiter)
 												.lineDelimiter(lineDelimiter)
 												.ignoreHeaderRow(ignoreHeaderRow)
+												.dateFormats(dateFormats)
 												.build();
 	
 	private FileSource mappedFileSource;
@@ -58,11 +56,6 @@ public class FileSourceTest {
 
 	@Before
 	public void setup() throws Exception {
-		DateTimeConverter dtConverter = new DateConverter();
-		for (String dateFormat : dateFormats) {
-			dtConverter.setPattern(dateFormat);
-		}
-		ConvertUtils.register(dtConverter, Date.class);
 		cachedFileSource = new CachedFileSource("Name", fileMetaData);
 		cachedFileSource.call();
 		mappedFileSource = new RandomAccessFileSource("Name", fileMetaData);

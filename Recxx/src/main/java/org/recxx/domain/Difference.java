@@ -1,6 +1,9 @@
 package org.recxx.domain;
 
-import java.util.List;
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -11,20 +14,20 @@ public class Difference {
 	
 	private final Key key;
 	private final Column column;
-	private final ComparisonResult comparison;
+	private final BigDecimal absoluteDifference;
+	private final BigDecimal percentageDifference;
 	private final Object field1;
 	private final Object field2;
-	private final List<String> keyColumns;
 	private final String alias1;
 	private final String alias2;
 	
 	private Difference(Builder builder) {
 		this.key = builder.key;
 		this.column = builder.column;
-		this.comparison = builder.comparison;
+		this.absoluteDifference = builder.absoluteDifference;
+		this.percentageDifference = builder.percentageDifference;
 		this.field1 = builder.field1;
 		this.field2 = builder.field2;
-		this.keyColumns = builder.keyColumns;
 		this.alias1 = builder.alias1;
 		this.alias2 = builder.alias2;
 	}
@@ -33,10 +36,10 @@ public class Difference {
 		
 		Key key;
 		Column column;
-		ComparisonResult comparison;
 		Object field1;
 		Object field2;
-		List<String> keyColumns;
+		BigDecimal absoluteDifference;
+		BigDecimal percentageDifference;
 		String alias1;
 		String alias2;
 		
@@ -55,18 +58,18 @@ public class Difference {
 			return this;
 		}
 		
-		public Builder comparison(ComparisonResult value) {
-			comparison = value;
+		public Builder absoluteDifference(BigDecimal value) {
+			absoluteDifference = value;
+			return this;
+		}
+		
+		public Builder percentageDifference(BigDecimal value) {
+			percentageDifference = value;
 			return this;
 		}
 		
 		public Builder column(Column value) {
 			column = value;
-			return this;
-		}
-		
-		public Builder keyColumns(List<String> value) {
-			keyColumns = value;
 			return this;
 		}
 		
@@ -94,10 +97,6 @@ public class Difference {
 		return column;
 	}
 
-	public ComparisonResult getComparison() {
-		return comparison;
-	}
-
 	public Object getField1() {
 		return field1;
 	}
@@ -106,16 +105,52 @@ public class Difference {
 		return field2;
 	}
 
-	public List<String> getKeyColumns() {
-		return keyColumns;
+	public BigDecimal getAbsoluteDifference() {
+		return absoluteDifference;
 	}
-	
+
+	public BigDecimal getPercentageDifference() {
+		return percentageDifference;
+	}
+
 	public Object getAlias1() {
 		return alias1;
 	}
 	
 	public Object getAlias2() {
 		return alias2;
+	}
+	
+	public String toOutputString(){
+		return toOutputString(Default.COMMA, Default.DATE_FORMAT, Default.SIXDP_PERCENT_FORMAT);
+	}
+	
+	public String toOutputString(String delimiter, SimpleDateFormat dateFormatter, DecimalFormat percentFormat) {
+		StringBuilder sb = new StringBuilder();
+		sb.append(getKey().toOutputString(delimiter));
+		sb.append(getColumn().getName()).append(delimiter);
+		if (getField1() != null && Date.class.isAssignableFrom(getField1().getClass())) {
+			sb.append(dateFormatter.format(getField1())).append(delimiter);
+		}
+		else {
+			sb.append(getField1()).append(delimiter);
+		}
+		if (getField2() != null && Date.class.isAssignableFrom(getField2().getClass())) {
+			sb.append(dateFormatter.format(getField2())).append(delimiter);
+		}
+		else {
+			sb.append(getField2()).append(delimiter);
+		}
+		if (getField1() != null && Number.class.isAssignableFrom(getField1().getClass()) && 
+				getField2() != null && Number.class.isAssignableFrom(getField2().getClass())) {
+			sb.append(percentFormat.format(getPercentageDifference()))
+			.append(delimiter)
+			.append(getAbsoluteDifference());
+		}
+		else {
+			sb.append(delimiter);
+		}		
+		return sb.toString();
 	}
 	
 	@Override

@@ -1,22 +1,17 @@
 package org.recxx;
 
 import java.math.BigDecimal;
-import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
 
-import org.apache.commons.beanutils.ConvertUtils;
-import org.apache.commons.beanutils.converters.DateConverter;
-import org.apache.commons.beanutils.converters.DateTimeConverter;
-import org.apache.commons.configuration.ConfigurationException;
 import org.apache.log4j.Logger;
 import org.recxx.configuration.RecxxConfiguration;
 import org.recxx.destination.Destination;
 import org.recxx.domain.ComparisonResult;
+import org.recxx.domain.Default;
 import org.recxx.domain.Difference;
 import org.recxx.domain.Key;
 import org.recxx.domain.Summary;
@@ -29,24 +24,13 @@ import org.recxx.utils.SystemUtils;
 public class Recxx2 {
 	
 	private static Logger LOGGER = Logger.getLogger(Recxx2.class);
-	
-	private final RecxxConfiguration configuration;
-	private final ExecutorService executor = Executors.newFixedThreadPool(2);
 
-	public Recxx2(String filePath) throws ConfigurationException {
-		this.configuration = new RecxxConfiguration(filePath);
+	public List<Destination> execute(String filePath) throws Exception {
+		RecxxConfiguration configuration = new RecxxConfiguration(filePath);
+		return execute(configuration);
 	}
 
-	public Recxx2(RecxxConfiguration config) throws ConfigurationException {
-		this.configuration = config;
-	}
-
-	public Summary execute() {
-		
-		//TODO Move to ConvertUtilsBean to allow per source specific conversions
-		DateTimeConverter dtConverter = new DateConverter(null);
-		dtConverter.setPatterns(configuration.getStringArray("dateFormats"));
-		ConvertUtils.register(dtConverter, Date.class);
+	public List<Destination> execute(RecxxConfiguration configuration) throws Exception {
 		
 		List<Source<Key>> sources = new AbstractSourceFactory().getSources(configuration);
 		
@@ -57,6 +41,8 @@ public class Recxx2 {
 
 		long t = System.currentTimeMillis();
 		LOGGER.info("Starting sources");
+		
+		ExecutorService executor = Executors.newFixedThreadPool(2);
         executor.execute(task1);
         executor.execute(task2);
 
@@ -72,25 +58,19 @@ public class Recxx2 {
 		LOGGER.info("Memory used: " + SystemUtils.memoryUsed() + "%");
 		executor.shutdown();
 	    
-		Summary summary = null;
-        try {
-			summary = compare(task1.get(), task2.get(), destinations);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} catch (ExecutionException e) {
-			e.printStackTrace();
-		}
-		return summary;
+		return compare(task1.get(), task2.get(), destinations, configuration);
     }
 
-	private Summary compare(Source<Key> source1,
-						Source<Key> source2, 
-						List<Destination> destinations) {
+	private List<Destination> compare(Source<Key> source1,
+							Source<Key> source2, 
+							List<Destination> destinations,
+							RecxxConfiguration configuration) {
 
         	Set<Key> keySet1 = source1.getKeySet();
             Set<Key> keySet2 = source2.getKeySet();
             
         open(destinations);
+        writeHeader(destinations, configuration);
 
         Long t = System.currentTimeMillis();
         LOGGER.info("Starting compare");
@@ -115,15 +95,16 @@ public class Recxx2 {
 			}
 			
 			for (int i = 0; i < row1.size(); i++) {
+				String columnName = source1.getColumns().get(i).getName();
 				
-				if(compareColumns1.contains(RecxxConfiguration.ALL_COLUMNS) ||
-						compareColumns1.contains(source1.getColumns().get(i).getName())) {
+				if(compareColumns1.contains(Default.ALL_COLUMNS) ||
+						compareColumns1.contains(columnName)) {
 					
 					Object field1 = row1.get(i);
 					
 					if (keyExistsInBothSources  && i < row2.size() &&
-							(compareColumns2.contains(RecxxConfiguration.ALL_COLUMNS) ||
-								compareColumns2.contains(source1.getColumns().get(i).getName()))) {
+							(compareColumns2.contains(Default.ALL_COLUMNS) ||
+								compareColumns2.contains(columnName))) {
 						
 						Object field2 = row2.get(i);
 						ComparisonResult comparison = ComparisonUtils.compare(field1, 
@@ -133,14 +114,14 @@ public class Recxx2 {
 																				ignoreCase); 
 						if (comparison.isDifferent()) {
 							Difference difference = new Difference.Builder()
+								.key(key)
 								.alias1(source1.getAlias())
 								.alias2(source2.getAlias())
 								.column(source1.getColumns().get(i))
-								.comparison(comparison)
 								.field1(field1)
 								.field2(field2)
-								.key(key)
-								.keyColumns(source1.getKeyColumns())
+								.absoluteDifference(comparison.getAbsoluteDifference())
+								.percentageDifference(comparison.getPercentageDifference())
 								.build();
 							writeDifference(destinations, difference);
 							matchedRow = false;
@@ -148,13 +129,14 @@ public class Recxx2 {
 					}
 					else  {
 						Difference difference = new Difference.Builder()
+							.key(key)
 							.alias1(source1.getAlias())
 							.alias2(source2.getAlias())
 							.column(source1.getColumns().get(i))
 							.field1(field1)
 							.field2("Missing")
-							.key(key)
-							.keyColumns(source1.getKeyColumns())
+							.absoluteDifference(BigDecimal.ZERO)
+							.percentageDifference(BigDecimal.ZERO)
 							.build();
 						writeDifference(destinations, difference);
 						matchedRow = false;
@@ -174,21 +156,22 @@ public class Recxx2 {
 				List<?> row2 = source2.getRow(key);					
 				
 				for (int i = 0; i < row2.size(); i++) {
-					Object columnName = source2.getColumns().get(i).getName();
+					String columnName = source2.getColumns().get(i).getName();
 					
 					if (!source2.getKeyColumns().contains(columnName)
 							&& (compareColumns2.contains(columnName)  ||
-								compareColumns2.contains(RecxxConfiguration.ALL_COLUMNS))) {
+								compareColumns2.contains(Default.ALL_COLUMNS))) {
 						
 						Object field2 = row2.get(i);
 						Difference difference = new Difference.Builder()
+							.key(key)
 							.alias1(source1.getAlias())
 							.alias2(source2.getAlias())
 							.column(source2.getColumns().get(i))
 							.field1("Missing")
 							.field2(field2)
-							.key(key)
-							.keyColumns(source2.getKeyColumns())
+							.absoluteDifference(BigDecimal.ZERO)
+							.percentageDifference(BigDecimal.ZERO)
 							.build();
 						writeDifference(destinations, difference);
 					}
@@ -210,10 +193,16 @@ public class Recxx2 {
         LOGGER.info("Memory used: " + SystemUtils.memoryUsed() + "%");
         LOGGER.info("Compare complete in " + ((System.currentTimeMillis() - t) / 1000d) +"s");
         
-        return summary;
+        return destinations;
 	            
 	}
 
+	private void writeHeader(List<Destination> destinations, RecxxConfiguration configuration) {
+		for (Destination destination : destinations) {
+			destination.writeHeader(configuration);		
+		}
+	}
+	
 	private void writeDifference(List<Destination> destinations, Difference difference) {
 		for (Destination destination : destinations) {
 			destination.writeDifference(difference);
@@ -259,13 +248,13 @@ public class Recxx2 {
 	
     public static void main(String args[]) {
     	if (args.length == 0) {
-    		LOGGER.error("Properties configuration file required, please provide a valid properties filepath");
+    		LOGGER.error("Configuration file required, please provide a valid filepath");
     	} 
     	else {
     		try {
 	    		LOGGER.info("Running Recxx with the following config: '" + args[0] + "'");
-	    		Recxx2 recxx = new Recxx2(args[0]);
-    			recxx.execute();
+	    		Recxx2 recxx = new Recxx2();
+    			recxx.execute(args[0]);
     		} catch (Exception e) {
     			LOGGER.error("A problem has occurred, using the configuration file supplied: "
     				 + args[0] + "', please recheck your configuration");

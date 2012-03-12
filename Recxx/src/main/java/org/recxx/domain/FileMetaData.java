@@ -14,7 +14,7 @@ public class FileMetaData {
 	private final boolean ignoreHeaderRow;
 
 	private final String delimiter;
-	private final char lineDelimiter;
+	private final String lineDelimiter;
 
 	private final List<String> keyColumns;
 	private final List<String> columnsToCompare;
@@ -28,7 +28,7 @@ public class FileMetaData {
 		 boolean ignoreHeaderRow;
 
 		 String delimiter;
-		 char lineDelimiter;
+		 String lineDelimiter;
 
 		 List<String> keyColumns;
 		 List<String> columnsToCompare;
@@ -65,7 +65,7 @@ public class FileMetaData {
 			 return this;
 		 }
 		 
-		 public Builder lineDelimiter(char lineDelimiter) {
+		 public Builder lineDelimiter(String lineDelimiter) {
 			 this.lineDelimiter = lineDelimiter;
 			 return this;
 		 }
@@ -120,7 +120,7 @@ public class FileMetaData {
 		return delimiter;
 	}
 
-	public char getLineDelimiter() {
+	public String getLineDelimiter() {
 		return lineDelimiter;
 	}
 

@@ -29,17 +29,6 @@ public class AbstractDestinationFactoryTest {
 	}
 
 	@Test(expected=IllegalArgumentException.class)
-	public void testGetDestinationsWithNoConfig() {
-		factory.getDestinations(config);
-	}
-
-	@Test(expected=IllegalArgumentException.class)
-	public void testGetDestinationsWithNoTypeConfig() {
-		config.setProperty("destinations", new String[]{"Destination1"});
-		factory.getDestinations(config);
-	}
-
-	@Test(expected=IllegalArgumentException.class)
 	public void testGetDestinationsWithInvalidDestinationTypes() {
 		config.setProperty("destinations", new String[]{"Destination1"});
 		config.setProperty("Destination1.type", "DestinationTypeDoesNotExist");

@@ -20,6 +20,7 @@ import org.recxx.utils.SystemUtils;
  * This class represents a facade on to a Database for use as a data source when
  * rec'ing 2 sources of data
  */
+@SuppressWarnings("all")
 public class DatabaseFacadeWorker extends AbstractRecFeed implements RecxxWorker {
 
     protected Properties properties = new Properties();

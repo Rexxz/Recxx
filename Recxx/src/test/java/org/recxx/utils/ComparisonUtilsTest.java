@@ -132,7 +132,7 @@ public class ComparisonUtilsTest {
 		assertEquals(false, ComparisonUtils.compare(Float.valueOf(1f), Float.valueOf(1f)).isDifferent());
 		assertEquals(true, ComparisonUtils.compare(Float.valueOf(1f), Float.valueOf(2f)).isDifferent());
 		assertEquals(true, ComparisonUtils.compare(Float.valueOf(1f), Float.valueOf(-1f)).isDifferent());
-		assertEquals(false, ComparisonUtils.compare(Float.valueOf(1.0124f), Float.valueOf(1.0123f)).isDifferent());  // Below default tolerance level
+		assertEquals(false, ComparisonUtils.compare(Float.valueOf(1.0124f), Float.valueOf(1.0123f), ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE, BigDecimal.valueOf(0.01)).isDifferent());
 		assertEquals(false, ComparisonUtils.compare(Float.valueOf(0.00000124f), Float.valueOf(0.00000123f)).isDifferent());  // Below default smallest absolute minimum level
 		assertEquals(true, ComparisonUtils.compare(Float.valueOf(1.0124f), Float.valueOf(1.0123f),BigDecimal.valueOf(0),BigDecimal.valueOf(0)).isDifferent());
 	}
@@ -145,7 +145,7 @@ public class ComparisonUtilsTest {
 		assertEquals(false, ComparisonUtils.compare(Float.valueOf(1f), Double.valueOf(1d)).isDifferent());
 		assertEquals(true, ComparisonUtils.compare(Float.valueOf(1f), Double.valueOf(2d)).isDifferent());
 		assertEquals(true, ComparisonUtils.compare(Float.valueOf(1f), Double.valueOf(-1d)).isDifferent());
-		assertEquals(false, ComparisonUtils.compare(Float.valueOf(1.0124f), Double.valueOf(1.0123d)).isDifferent());  // Below default tolerance level
+		assertEquals(false, ComparisonUtils.compare(Float.valueOf(1.0124f), Double.valueOf(1.0123d),ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE, BigDecimal.valueOf(0.01)).isDifferent());
 		assertEquals(false, ComparisonUtils.compare(Float.valueOf(0.00000124f), Double.valueOf(0.00000123d)).isDifferent());  // Below default smallest absolute minimum level
 		assertEquals(true, ComparisonUtils.compare(Float.valueOf(1.0124f), Double.valueOf(1.0123d),BigDecimal.valueOf(0),BigDecimal.valueOf(0)).isDifferent());
 	}
@@ -158,7 +158,7 @@ public class ComparisonUtilsTest {
 		assertEquals(false, ComparisonUtils.compare(Double.valueOf(1), Double.valueOf(1)).isDifferent());
 		assertEquals(true, ComparisonUtils.compare(Double.valueOf(1), Double.valueOf(2)).isDifferent());
 		assertEquals(true, ComparisonUtils.compare(Double.valueOf(1), Double.valueOf(-1)).isDifferent());
-		assertEquals(false, ComparisonUtils.compare(Double.valueOf(1.0124d), Double.valueOf(1.0123d)).isDifferent());  // Below default tolerance level
+		assertEquals(false, ComparisonUtils.compare(Double.valueOf(1.0124d), Double.valueOf(1.0123d),ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE, BigDecimal.valueOf(0.01)).isDifferent());
 		assertEquals(false, ComparisonUtils.compare(Double.valueOf(0.00000124d), Double.valueOf(0.00000123d)).isDifferent());  // Below default smallest absolute minimum level
 		assertEquals(true, ComparisonUtils.compare(Double.valueOf(1.0124d), Double.valueOf(1.0123d),BigDecimal.valueOf(0),BigDecimal.valueOf(0)).isDifferent());
 	}
@@ -172,7 +172,7 @@ public class ComparisonUtilsTest {
 		assertEquals(false, ComparisonUtils.compare(BigDecimal.valueOf(1), BigDecimal.valueOf(1)).isDifferent());
 		assertEquals(true, ComparisonUtils.compare(BigDecimal.valueOf(1), BigDecimal.valueOf(2)).isDifferent());
 		assertEquals(true, ComparisonUtils.compare(BigDecimal.valueOf(1), BigDecimal.valueOf(-1)).isDifferent());
-		assertEquals(false, ComparisonUtils.compare(BigDecimal.valueOf(1.0124d), BigDecimal.valueOf(1.0123d)).isDifferent());  // Below default tolerance level
+		assertEquals(false, ComparisonUtils.compare(BigDecimal.valueOf(1.0124d), BigDecimal.valueOf(1.0123d),ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE, BigDecimal.valueOf(0.01)).isDifferent());
 		assertEquals(false, ComparisonUtils.compare(BigDecimal.valueOf(0.00000124d), BigDecimal.valueOf(0.00000123d)).isDifferent());  // Below default smallest absolute minimum level
 		assertEquals(true, ComparisonUtils.compare(BigDecimal.valueOf(1.0124d), BigDecimal.valueOf(1.0123d),BigDecimal.valueOf(0),BigDecimal.valueOf(0)).isDifferent());
 		assertEquals(true, ComparisonUtils.compare(null, BigDecimal.valueOf(1.0123d),BigDecimal.valueOf(0),BigDecimal.valueOf(0)).isDifferent());

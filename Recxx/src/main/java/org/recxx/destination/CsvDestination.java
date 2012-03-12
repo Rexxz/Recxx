@@ -7,12 +7,15 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.recxx.configuration.RecxxConfiguration;
+import org.recxx.domain.Default;
 import org.recxx.domain.Difference;
 import org.recxx.domain.FileMetaData;
+import org.recxx.domain.Header;
 import org.recxx.domain.Summary;
 
 public class CsvDestination extends AbstractDestination {
@@ -26,7 +29,7 @@ public class CsvDestination extends AbstractDestination {
 		file = new File(fileMetaData.getFilePath());
 		if (file.exists()) {
 			LOGGER.warn("File '" + fileMetaData.getFilePath() + "' exists already, it will be deleted first!");
-			file.delete();
+			FileUtils.deleteQuietly(file);
 		}
 		setDelimiter(fileMetaData.getDelimiter());
 		setLineDelimiter(fileMetaData.getLineDelimiter());
@@ -36,9 +39,19 @@ public class CsvDestination extends AbstractDestination {
 		}
 	}
 	
+	public void writeHeader(RecxxConfiguration configuration) {
+		Header header = new Header(configuration);
+		try {
+			writeLine(header.toOutputString(getDelimiter(), getLineDelimiter()));
+		} catch (IOException e) {
+			throw new RuntimeException("Error while attempting to write header for configuration '" 
+					+ configuration + "'", e) ;
+		}
+	}
+
 	public void writeDifference(Difference difference) {
 		try {
-			writeLine(defaultDifference(difference));
+			writeLine(difference.toOutputString(getDelimiter(), getDateFormatter(), getPercentFormatter()));
 		} catch (IOException e) {
 			throw new RuntimeException("Error while attempting to write difference for key '" 
 				+ difference.getKey() + "'", e) ;
@@ -46,49 +59,28 @@ public class CsvDestination extends AbstractDestination {
 	}
 
 	public void writeSummary(Summary summary) {
+		setSummary(summary);
 		try {
-			writeLine(defaultSummary(summary));
+			writeLine(summary.toOutputString(getDelimiter(), getLineDelimiter(), getPercentFormatter()));
 		} catch (IOException e) {
 			throw new RuntimeException("Error while attempting to write summary for the reconciliation", e) ;
 		}
 	}
 
 	public void write(Object object) throws IOException {
-		if (object instanceof Date) {
-			write((Date) object);
-		}
-		else {
 			write(object == null ? null : object.toString());		
-		}
-	}
-	
-	public void write(Date date) throws IOException {
-		write(date == null ? null : dateFormatter.format(date));		
 	}
 	
 	public void write(String string) throws IOException {
 		if (isEmpty(string)) {
-			string = nullString;
+			string = Default.NULL_STRING;
 		}
 		bufferedWriter.write(string);
 	}
 
-	public void writeLine(List<?> values) throws IOException {
-		int idx = 0;
-		for (Object value : values) {
-			if (values.size() == idx + 1) {
-				writeLine(value);
-			} else {
-				write(value);
-				write(delimiter);
-			}
-			idx++;
-		}
-	}
-
 	public void writeLine(Object value) throws IOException {
 		write(value);
-		bufferedWriter.newLine();
+		write(getLineDelimiter());
 	}
 	
 	public void open() throws IOException {
@@ -101,5 +93,6 @@ public class CsvDestination extends AbstractDestination {
 		bufferedWriter.close();
 		fileWriter.close();
 	}
-	
+
+
 }

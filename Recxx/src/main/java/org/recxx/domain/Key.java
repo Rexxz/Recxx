@@ -12,7 +12,7 @@ public class Key implements CharSequence, Serializable {
 
 	static final long serialVersionUID = 1L;
 	
-	public static final String DELIMITER = "¶";
+	public static final String DELIMITER = "ï¿½";
 
 	private static final String ENCODING = "UTF-8";
 	private final int offset;
@@ -70,17 +70,25 @@ public class Key implements CharSequence, Serializable {
 		return new Key(data, start + offset, end + offset);
 	}
 
+	public List<String> asList() {
+		String key = this.toString();
+		return Arrays.asList(key.split(DELIMITER));
+	}
+	
+	public String toOutputString(String delimiter) {
+		StringBuilder sb = new StringBuilder();
+		for (String keyPart : asList()) {
+			sb.append(keyPart).append(delimiter);
+		}
+		return sb.toString();
+	}
+
 	public String toString() {
 		try {
 			return new String(data, offset, end - offset, ENCODING);
 		} catch (UnsupportedEncodingException e) {
 			throw new RuntimeException("Unexpected: " + ENCODING + " not supported");
 		}
-	}
-	
-	public List<String> asList() {
-		String key = this.toString();
-		return Arrays.asList(key.split(DELIMITER));
 	}
 	
 	@Override

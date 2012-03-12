@@ -33,6 +33,7 @@ public class FileSourceFactory implements SourceFactory {
 										.lineDelimiter(configuration.configureLineDelimiter(alias))
 										.ignoreHeaderRow(configuration.configureIgnoreHeaderRow(alias))
 										.columnsToCompare(configuration.configureColumnsToCompare(alias))
+										.dateFormats(configuration.configureDateFormats(alias))
 										.build();		
 		
 		try {

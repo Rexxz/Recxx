@@ -11,13 +11,13 @@ public class ConsoleMetaData {
 
 	private final List<String> dateFormats;
 	private final String delimiter;
-	private final char lineDelimiter;
+	private final String lineDelimiter;
 
 	public static class Builder {
 		
 		 List<String> dateFormats;
 		 String delimiter;
-		 char lineDelimiter;
+		 String lineDelimiter;
 		 
 		 public Builder dateFormats(List<String> dateFormats) {
 			 this.dateFormats = dateFormats;
@@ -29,7 +29,7 @@ public class ConsoleMetaData {
 			 return this;
 		 }
 		 
-		 public Builder lineDelimiter(char lineDelimiter) {
+		 public Builder lineDelimiter(String lineDelimiter) {
 			 this.lineDelimiter = lineDelimiter;
 			 return this;
 		 }
@@ -53,7 +53,7 @@ public class ConsoleMetaData {
 		return delimiter;
 	}
 
-	public char getLineDelimiter() {
+	public String getLineDelimiter() {
 		return lineDelimiter;
 	}
 
