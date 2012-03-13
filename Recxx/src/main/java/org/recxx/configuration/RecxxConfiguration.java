@@ -196,7 +196,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 			if (clazz == null) {
 				throw new IllegalArgumentException("'" + alias + ".columns' incorrectly specified in configuration, " +
 						"this component must have columns, configured using '<alias>.columns=<name>|<type>, <name>|<type>...'," +
-						" column definition '" + column + "' received and no matching class definition found for '" + split[1] + 
+						" column definition '" + column + "' received and no matching class definition found for '" + columnType + 
 						"' in " + classAbbreviationMap.toString());
 			}
 			columnDefinitions.add(new Column(columnName, clazz));
