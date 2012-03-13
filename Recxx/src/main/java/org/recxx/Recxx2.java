@@ -142,6 +142,32 @@ public class Recxx2 {
 					}
 				}
             }
+
+			if (keyExistsInBothSources) {
+				for (int i = row1.size(); i < row2.size(); i++) {
+					
+					String columnName = source2.getColumns().get(i).getName();
+	
+					if(compareColumns1.contains(Default.ALL_COLUMNS) ||
+							compareColumns1.contains(columnName)) {
+						
+						Object field2 = row2.get(i);
+						Difference difference = new Difference.Builder()
+							.key(key)
+							.alias1(source1.getAlias())
+							.alias2(source2.getAlias())
+							.column(source2.getColumns().get(i))
+							.field1("Missing")
+							.field2(field2)
+							.absoluteDifference(BigDecimal.ZERO)
+							.percentageDifference(BigDecimal.ZERO)
+							.build();
+						writeDifference(destinations, difference);
+						matchedRow = false;
+						
+					}
+				}
+			}
 			
 			if (matchedRow) {
 				matchCount++;

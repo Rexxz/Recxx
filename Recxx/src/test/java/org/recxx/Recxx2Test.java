@@ -65,7 +65,21 @@ public class Recxx2Test {
 		failsToReconcile(fileConfig);
 		FileAssert.assertEquals(expectedOutputFile, actualOutputFile);
 	}
+
+	@Test
+	public void fileSourcesSource1HasExtraColumn() throws Exception {
+		fileConfig.setProperty("source1.filePath", Recxx2Test.class.getResource("source2ExtraColumn_10.csv").getPath());
+		fileConfig.setProperty("source1.columns", Arrays.asList("Id|Integer", "Name|String", "Balance|Double", "Date|Date", "Address|String"));
+		failsToReconcile(fileConfig);
+	}
 	
+	@Test
+	public void fileSourcesSource2HasExtraColumn() throws Exception {
+		fileConfig.setProperty("source2.filePath", Recxx2Test.class.getResource("source1ExtraColumn_10.csv").getPath());
+		fileConfig.setProperty("source2.columns", Arrays.asList("Id|Integer", "Name|String", "Balance|Double", "Date|Date", "Address|String"));
+		failsToReconcile(fileConfig);
+	}
+
 	@Test
 	public void fileSourcesTheSameAndReconciles() throws Exception {
 		fileConfig.setProperty("source2.filePath", Recxx2Test.class.getResource("source1_10.csv").getPath());
