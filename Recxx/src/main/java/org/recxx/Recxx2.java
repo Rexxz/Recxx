@@ -148,8 +148,8 @@ public class Recxx2 {
 					
 					String columnName = source2.getColumns().get(i).getName();
 	
-					if(compareColumns1.contains(Default.ALL_COLUMNS) ||
-							compareColumns1.contains(columnName)) {
+					if(compareColumns2.contains(Default.ALL_COLUMNS) ||
+							compareColumns2.contains(columnName)) {
 						
 						Object field2 = row2.get(i);
 						Difference difference = new Difference.Builder()
