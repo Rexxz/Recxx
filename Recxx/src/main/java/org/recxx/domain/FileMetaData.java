@@ -172,6 +172,23 @@ public class FileMetaData {
 		}
 		return columnsToCompare;
 	}
+	
+	public static FileMetaData valueOf(FileMetaData fileMetaData, List<?> columnNames) {
+		List<Column> columns = new ArrayList<Column>();
+		for (int i = 0; i < fileMetaData.getColumnTypes().size(); i++) {
+			columns.add(new Column(columnNames.get(i).toString(), fileMetaData.getColumnTypes().get(i)));
+		} 
+		return new FileMetaData.Builder()
+						.columns(columns)
+						.columnsToCompare(fileMetaData.getColumnsToCompare())
+						.dateFormats(fileMetaData.getDateFormats())
+						.delimiter(fileMetaData.getDelimiter())
+						.filePath(fileMetaData.getFilePath())
+						.ignoreHeaderRow(fileMetaData.isIgnoreHederRow())
+						.keyColumns(fileMetaData.getKeyColumns())
+						.lineDelimiter(fileMetaData.getLineDelimiter())
+						.build();
+	}
 
 	@Override
 	public String toString() {

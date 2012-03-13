@@ -174,19 +174,32 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		List<Column> columnDefinitions = new ArrayList<Column>();
 		for (String column : columns) {
 			String[] split = column.split("\\" + FileSource.DEFAULT_COLUMN_NAME_TYPE_SEPARATOR);
-			if (split.length !=2) {
-				throw new IllegalArgumentException("'" + alias + ".columns' incorrectly specified in configuration, " +
-						"this component must have columns, configured using '<alias>.columns=<name>|<type>, <name>|<type>...'," +
-						" column definition '" + column + "' cannot be split without separator '" + FileSource.DEFAULT_COLUMN_NAME_TYPE_SEPARATOR + "'");
-			}
-			Class<?> clazz = classAbbreviationMap.get(split[1]);
+			String columnName; String columnType; 
+			switch (split.length) {
+				case 2:	
+					columnName = split[0];
+					columnType = split[1];
+					break;
+				case 1:
+					columnName = Default.UNKNOWN_COLUMN_NAME;
+					columnType = split[0];
+					break;
+		
+				case 0:
+				default:
+					throw new IllegalArgumentException("'" + alias + ".columns' incorrectly specified in configuration, " +
+							"this component must have columns, configured using '<alias>.columns=<name>|<type>, <name>|<type>...'," +
+							" column definition '" + column + "' cannot be split without separator '" + FileSource.DEFAULT_COLUMN_NAME_TYPE_SEPARATOR + "'");
+			} 
+			
+			Class<?> clazz = classAbbreviationMap.get(columnType);
 			if (clazz == null) {
 				throw new IllegalArgumentException("'" + alias + ".columns' incorrectly specified in configuration, " +
 						"this component must have columns, configured using '<alias>.columns=<name>|<type>, <name>|<type>...'," +
 						" column definition '" + column + "' received and no matching class definition found for '" + split[1] + 
 						"' in " + classAbbreviationMap.toString());
 			}
-			columnDefinitions.add(new Column(split[0], clazz));
+			columnDefinitions.add(new Column(columnName, clazz));
 		}
 		return columnDefinitions;
 	}

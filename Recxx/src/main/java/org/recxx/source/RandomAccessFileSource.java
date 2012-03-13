@@ -8,6 +8,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.recxx.domain.Coordinates;
+import org.recxx.domain.Default;
 import org.recxx.domain.FileMetaData;
 import org.recxx.domain.Key;
 
@@ -25,14 +26,23 @@ public class RandomAccessFileSource extends FileSource {
 		StringBuilder line = new StringBuilder();
 		int start = 0;
 		boolean isFirstRow = true;
+		boolean isIgnoreHeaderRow = fileMetaData.isIgnoreHederRow();
 		
 		LOGGER.info("Processing file: " + fileMetaData.getFilePath());
+		boolean columnNamesNotSupplied = fileMetaData.getColumnNames().contains(Default.UNKNOWN_COLUMN_NAME);
+		if (columnNamesNotSupplied) {
+			isIgnoreHeaderRow = true;
+		}
 		
 		int i = 0;
 		while (byteBuffer.hasRemaining()) {
 			char c = (char) byteBuffer.get();
 			if ( c == fileMetaData.getLineDelimiter().charAt(0) || !byteBuffer.hasRemaining() ) {
-				if (fileMetaData.isIgnoreHederRow() && isFirstRow) {
+				if (isFirstRow && isIgnoreHeaderRow) {
+					if (columnNamesNotSupplied) {
+						List<?> columns = parseRow(line.toString(), getHeaderColumnTypes(fileMetaData.getColumns().size()));
+						fileMetaData = FileMetaData.valueOf(fileMetaData, columns);
+					}
 					isFirstRow = false;
 				}
 				else {
@@ -67,11 +77,11 @@ public class RandomAccessFileSource extends FileSource {
 		for (int i = coords.start; i <= coords.end; i++) {
 			builder.append((char) byteBuffer.get(i));
 		}
-		return parseRow(builder.toString());
+		return parseRow(builder.toString(), fileMetaData.getColumnTypes());
 	}
 	
 	private Key createKey(String line) {
-		List<?> fields = parseRow(line);
+		List<?> fields = parseRow(line, fileMetaData.getColumnTypes());
 		List<String> keys =  new ArrayList<String>();
 		for (Integer index : fileMetaData.getKeyColumnIndexes()) {
 			keys.add(fields.get(index).toString());

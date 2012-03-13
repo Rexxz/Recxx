@@ -27,12 +27,11 @@ public abstract class FileSource implements Source<Key> {
 	public static final String DEFAULT_COLUMN_NAME_TYPE_SEPARATOR = "|";
 	private static final String READ_ONLY = "r";
 
-	protected final FileMetaData fileMetaData;
+	protected FileMetaData fileMetaData;
 	protected final RandomAccessFile randomAccessFile;
 	protected final MappedByteBuffer byteBuffer;
 	protected final ConvertUtilsBean convertUtilsBean;
 	private final String alias;
-	
 	
 	protected FileSource(String alias, FileMetaData metaData) {
 		this.alias = alias;
@@ -52,15 +51,22 @@ public abstract class FileSource implements Source<Key> {
 	public String getAlias() {
 		return alias;
 	}
-
-	protected List<?> parseRow(String line) {
+	
+	protected List<Class<?>> getHeaderColumnTypes(int size) {
+		List<Class<?>> columnTypes = new ArrayList<Class<?>>();
+		for (int i = 0; i < size; i++) {
+			columnTypes.add(String.class);			
+		}
+		return columnTypes;
+	}
+	
+	protected List<?> parseRow(String line, List<Class<?>> columnTypes) {
 		CSVParser parser = new CSVParser(fileMetaData.getDelimiter().charAt(0), CSVParser.DEFAULT_QUOTE_CHARACTER, CSVParser.DEFAULT_ESCAPE_CHARACTER, false);
 		String[] fields;
 		List<Object> row = null;
 		try {
 			fields = parser.parseLine(line);
 			row = new ArrayList<Object>(fields.length);
-			List<Class<?>> columnTypes = fileMetaData.getColumnTypes();		
 			for (int i = 0; i < fields.length; i++) {
 				if (fields[i].isEmpty()) {
 					row.add(null);

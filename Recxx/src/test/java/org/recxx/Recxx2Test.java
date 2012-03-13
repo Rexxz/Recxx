@@ -8,13 +8,14 @@ import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 import org.recxx.configuration.RecxxConfiguration;
 import org.recxx.destination.ConsoleDestination;
 import org.recxx.destination.CsvDestination;
 import org.recxx.source.CachedFileSource;
+import org.recxx.source.RandomAccessFileSource;
 import org.recxx.utils.FileAssert;
 
 public class Recxx2Test {
@@ -24,7 +25,7 @@ public class Recxx2Test {
 	private static RecxxConfiguration fileConfig;
 
 	@Test
-	public void filesDifferAndFailsReconcile() throws Exception {
+	public void filesDifferAndFailsToReconcile() throws Exception {
 		String expectedOutputFile = Recxx2Test.class.getResource("expected0.01PercentTolerance.csv").getPath();
 		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
 		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
@@ -66,15 +67,37 @@ public class Recxx2Test {
 	}
 	
 	@Test
-	public void filesSourcesSameAndReconciles() throws Exception {
+	public void fileSourcesTheSameAndReconciles() throws Exception {
 		fileConfig.setProperty("source2.filePath", Recxx2Test.class.getResource("source1_10.csv").getPath());
 		assertReconciles(fileConfig);
 	}
 
 	@Test
-	public void filesSourcesUtf16SameAndReconciles() throws Exception {
+	public void fileSourcesTheSameUtf16AndReconciles() throws Exception {
 		fileConfig.setProperty("source1.filePath", Recxx2Test.class.getResource("source1_UTF16_10.csv").getPath());
 		fileConfig.setProperty("source2.filePath", Recxx2Test.class.getResource("source1_UTF16_10.csv").getPath());
+		assertReconciles(fileConfig);
+	}
+
+	@Test
+	public void fileSourcesSameWithColumnHeaderUsedAndReconciles() throws Exception {
+		fileConfig.setProperty("source1.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source2.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source2.filePath", Recxx2Test.class.getResource("source1_10.csv").getPath());
+		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
+		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
+		assertReconciles(fileConfig);
+	}
+
+	@Test
+	public void fileRandomAccessSourcesSameWithColumnHeaderUsedAndReconciles() throws Exception {
+		fileConfig.setProperty("source1.type", RandomAccessFileSource.class.getName());
+		fileConfig.setProperty("source1.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source2.type", RandomAccessFileSource.class.getName());
+		fileConfig.setProperty("source2.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source2.filePath", Recxx2Test.class.getResource("source1_10.csv").getPath());
+		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
+		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
 		assertReconciles(fileConfig);
 	}
 
@@ -84,11 +107,10 @@ public class Recxx2Test {
 		assertReconciles(fileConfig);
 	}
 	
-	@BeforeClass
-	public static void setUp() throws Exception {
+	@Before
+	public void setUp() throws Exception {
 		
 		fileConfig = new RecxxConfiguration();
-		
 		fileConfig.setProperty("dateFormats", "EEE MMM dd HH:mm:ss z yyyy");
 
 		fileConfig.setProperty("sources", Arrays.asList("source1", "source2"));
@@ -109,13 +131,13 @@ public class Recxx2Test {
 		
 		fileConfig.setProperty("destinations", "csvFile, console");
 		fileConfig.setProperty("csvFile.type", CsvDestination.class.getName());
-		fileConfig.setProperty("csvFile.filePath", "");
+		fileConfig.setProperty("csvFile.filePath", FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV);
 		fileConfig.setProperty("console.type", ConsoleDestination.class.getName());
 	}
 	
-	@AfterClass
-	public static void tearDown() throws Exception {
-		FileUtils.deleteQuietly(new File(FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV));
+	@After
+	public void tearDown() throws Exception {
+		FileUtils.deleteQuietly(new File(FileUtils.getTempDirectoryPath(), TEMP_OUTPUT_FILE_CSV));
 	}
 	
 	// TODO Excel Test
