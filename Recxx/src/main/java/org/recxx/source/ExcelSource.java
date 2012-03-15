@@ -103,7 +103,7 @@ public class ExcelSource implements Source<Key> {
  		   Cell cell = row.getCell(cn, Row.CREATE_NULL_AS_BLANK);
     	   
 			ExcelType type = coordinates.getType();
-			if (type.equals(ExcelType.VALUE)) {
+			if (type.equals(ExcelType.CELL)) {
 				 switch (cell.getCellType()) {
 				    case Cell.CELL_TYPE_STRING:
 				    	returnRow.add(cell.getRichStringCellValue().getString());
@@ -118,19 +118,13 @@ public class ExcelSource implements Source<Key> {
 				    case Cell.CELL_TYPE_BOOLEAN:
 				    	returnRow.add(cell.getBooleanCellValue());
 				        break;
+				    case Cell.CELL_TYPE_FORMULA:
+				    	returnRow.add(cell.getCellFormula());
+				    	break;
 				    default:
 				    	returnRow.add(null);
 				 }
 			} 
-			else if (type.equals(ExcelType.EXPRESSION)) {
-				 switch (cell.getCellType()) {
-				    case Cell.CELL_TYPE_FORMULA:
-				    	returnRow.add(cell.getCellFormula());
-				        break;
-				    default:
-				    	returnRow.add(null);
-				 }
-			}
 			else {
 				// TODO Something with formatting!
 			}
