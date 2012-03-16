@@ -72,7 +72,7 @@ public class CachedFileSource extends FileSource {
 	private Key createKey(List<?> fields) {
 		List<String> keys =  new ArrayList<String>();
 		for (Integer index : fileMetaData.getKeyColumnIndexes()) {
-			keys.add(fields.get(index) == null ? Default.NULL_STRING : fields.get(index).toString());
+			keys.add(fields.get(index) == null ? Default.NULL : fields.get(index).toString());
 		}
 		return new Key(keys);
 	}

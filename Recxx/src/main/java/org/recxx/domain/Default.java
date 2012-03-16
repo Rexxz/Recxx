@@ -8,6 +8,7 @@ public interface Default {
 	public static final String QUOTE = "\"";
 	public static final String COMMA = ",";
 	public static final String NULL_STRING = "";
+	public static final String NULL = "null";
 	public static final String UNKNOWN_COLUMN_NAME = "?";
 	public static final String LINE_DELIMITER = System.getProperty("line.separator");
 	public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MMM-yyyy hh:mm:ss.SSS");
