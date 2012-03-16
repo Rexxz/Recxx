@@ -84,7 +84,7 @@ public class RandomAccessFileSource extends FileSource {
 		List<?> fields = parseRow(line, fileMetaData.getColumnTypes());
 		List<String> keys =  new ArrayList<String>();
 		for (Integer index : fileMetaData.getKeyColumnIndexes()) {
-			keys.add(fields.get(index).toString());
+			keys.add(fields.get(index) == null ? Default.NULL_STRING : fields.get(index).toString());
 		}
 		return new Key(keys);
 	}
