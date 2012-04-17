@@ -1,5 +1,7 @@
 package org.recxx.factory;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,10 +17,19 @@ public class FileSourceFactory implements SourceFactory {
 	private Map<String, Class<?>> classAbbreviationMap = new HashMap<String, Class<?>>();	
 	
 	public FileSourceFactory() {
+		classAbbreviationMap.put("Character", Character.class);
 		classAbbreviationMap.put("String", String.class);
-		classAbbreviationMap.put("Double", Double.class);
+		
+		classAbbreviationMap.put("Boolean", Boolean.class);
+		classAbbreviationMap.put("Byte", Byte.class);
+		classAbbreviationMap.put("Short", Short.class);
 		classAbbreviationMap.put("Integer", Integer.class);
 		classAbbreviationMap.put("Long", Long.class);
+		classAbbreviationMap.put("BigInteger", BigInteger.class);
+		classAbbreviationMap.put("Double", Double.class);
+		classAbbreviationMap.put("Float", Float.class);
+		classAbbreviationMap.put("BigDecimal", BigDecimal.class);
+		
 		classAbbreviationMap.put("Date", Date.class);
 	}
 	
