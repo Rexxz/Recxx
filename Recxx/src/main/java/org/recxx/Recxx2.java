@@ -39,6 +39,8 @@ public class Recxx2 {
 		
 		List <Destination> destinations = new AbstractDestinationFactory().getDestinations(configuration);
 
+		LOGGER.info(configuration.getProperty("toleranceLevelPercent"));
+		
 		long t = System.currentTimeMillis();
 		LOGGER.info("Starting sources");
 		
@@ -106,13 +108,14 @@ public class Recxx2 {
 								compareColumns2.contains(columnName))) {
 						
 						Object field2 = row2.get(i);
-						ComparisonResult comparison = ComparisonUtils.compare(field1, 
-																				field2,
-																				smallestAbsoluteValue,
-																				toleranceLevel,
-																				ignoreCase); 
-						if (comparison.isDifferent()) {
-							Difference difference = new Difference.Builder()
+						try {
+							ComparisonResult comparison = ComparisonUtils.compare(field1, 
+									field2,
+									smallestAbsoluteValue,
+									toleranceLevel,
+									ignoreCase); 
+							if (comparison.isDifferent()) {
+								Difference difference = new Difference.Builder()
 								.key(key)
 								.alias1(source1.getAlias())
 								.alias2(source2.getAlias())
@@ -122,8 +125,12 @@ public class Recxx2 {
 								.absoluteDifference(comparison.getAbsoluteDifference())
 								.percentageDifference(comparison.getPercentageDifference())
 								.build();
-							writeDifference(destinations, difference);
-							matchedRow = false;
+								writeDifference(destinations, difference);
+								matchedRow = false;
+							}
+						} catch (UnsupportedOperationException e) {
+							LOGGER.error("A problem occurred with the comparison of the following Key: '" + key.toOutputString(Default.COMMA) + "' column " + source1.getColumns().get(i).getName()  
+										+ ", which attempted to compare '" + field1 + "' with '" + field2 + "'");
 						}
 					}
 					else  {

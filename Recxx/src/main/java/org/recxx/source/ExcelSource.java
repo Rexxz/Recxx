@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,6 +47,7 @@ public class ExcelSource implements Source<Key> {
 		try {
 			InputStream inputStream = new FileInputStream(fileMetaData.getFilePath());
 			workbook = WorkbookFactory.create(inputStream);
+			LOGGER.info(" source " + fileMetaData.getFilePath());
 		} catch (FileNotFoundException e) {
 			throw new RuntimeException(e);
 		}
@@ -96,38 +98,51 @@ public class ExcelSource implements Source<Key> {
 	public List<?> getRow(Key key) {
 		ExcelCoordinates coordinates = coordinatesMap.get(key);
 		Row row = workbook.getSheet(coordinates.getSheetName()).getRow(coordinates.getRow());
-		List<Object> returnRow = new ArrayList<Object>();
+		ArrayList<Object> returnRow = new ArrayList<Object>();
 		
  	   for(int cn = 0; cn < row.getLastCellNum(); cn++) {
 
- 		   Cell cell = row.getCell(cn, Row.CREATE_NULL_AS_BLANK);
+ 		   	Cell cell = row.getCell(cn, Row.CREATE_NULL_AS_BLANK);
     	   
 			ExcelType type = coordinates.getType();
 			if (type.equals(ExcelType.CELL)) {
-				 switch (cell.getCellType()) {
-				    case Cell.CELL_TYPE_STRING:
-				    	returnRow.add(cell.getRichStringCellValue().getString());
-				        break;
-				    case Cell.CELL_TYPE_NUMERIC:
-				        if (DateUtil.isCellDateFormatted(cell)) {
-				        	returnRow.add(cell.getDateCellValue());
-				        } else {
-				        	returnRow.add(cell.getNumericCellValue());
-				        }
-				        break;
-				    case Cell.CELL_TYPE_BOOLEAN:
-				    	returnRow.add(cell.getBooleanCellValue());
-				        break;
-				    case Cell.CELL_TYPE_FORMULA:
-				    	returnRow.add(cell.getCellFormula());
-				    	break;
-				    default:
-				    	returnRow.add(null);
-				 }
+				switch (cell.getCellType()) {
+			    case Cell.CELL_TYPE_STRING:
+			    	returnRow.add(cell.getRichStringCellValue().getString());
+			        break;
+			    case Cell.CELL_TYPE_NUMERIC:
+			        if (DateUtil.isCellDateFormatted(cell)) {
+			        	returnRow.add(cell.getDateCellValue());
+			        } else {
+			        	returnRow.add(cell.getNumericCellValue());
+			        }
+			        break;
+			    case Cell.CELL_TYPE_BOOLEAN:
+			    	returnRow.add(cell.getBooleanCellValue());
+			        break;
+			    case Cell.CELL_TYPE_FORMULA:
+			    	returnRow.add(cell.getCellFormula());
+			    	break;
+			    default:
+			    	returnRow.add(null);
+			 	}
 			} 
 			else {
 				// TODO Something with formatting!
 			}
+		}
+ 	    return trimRow(returnRow);
+	}
+
+	private List<?> trimRow(ArrayList<Object> returnRow) {
+		returnRow.trimToSize();
+ 	    for (int i = returnRow.size() - 1; i >= 0; i--) {
+ 	    	if (returnRow.get(i) == null) {
+ 	    		returnRow.remove(i);
+ 	    	}
+ 	    	else {
+ 	    		break;
+ 	    	}
 		}
 		return returnRow;
 	}
