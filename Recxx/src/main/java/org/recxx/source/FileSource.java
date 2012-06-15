@@ -87,6 +87,17 @@ public abstract class FileSource implements Source<Key> {
 		return row;
 	}
 	
+	protected boolean isCurrentLineDelimiter(String delimiter, Character... characters) {
+		StringBuilder sb = new StringBuilder(2);
+		if (delimiter.length() == characters.length) {
+			for (Character c : characters) {
+				sb.append(c);
+			}
+			return delimiter.equals(sb.toString());
+		}
+		return false;
+	}
+
 	public List<Column> getColumns() {
 		return fileMetaData.getColumns();
 	}

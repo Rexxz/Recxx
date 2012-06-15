@@ -27,6 +27,7 @@ public class RandomAccessFileSource extends FileSource {
 		int start = 0;
 		boolean isFirstRow = true;
 		boolean isIgnoreHeaderRow = fileMetaData.isIgnoreHederRow();
+		String delimiter = fileMetaData.getLineDelimiter();
 		
 		LOGGER.info("Processing file: " + fileMetaData.getFilePath());
 		boolean columnNamesNotSupplied = fileMetaData.getColumnNames().contains(Default.UNKNOWN_COLUMN_NAME);
@@ -35,9 +36,12 @@ public class RandomAccessFileSource extends FileSource {
 		}
 		
 		int i = 0;
+		char p = ' ';
 		while (byteBuffer.hasRemaining()) {
 			char c = (char) byteBuffer.get();
-			if ( c == fileMetaData.getLineDelimiter().charAt(0) || !byteBuffer.hasRemaining() ) {
+			if ( delimiter.length() == 1 && isCurrentLineDelimiter(delimiter, c)
+					|| (delimiter.length() == 2 && isCurrentLineDelimiter(delimiter, p, c)) 
+					|| !byteBuffer.hasRemaining() ) {
 				if (isFirstRow && isIgnoreHeaderRow) {
 					if (columnNamesNotSupplied) {
 						List<?> columns = parseRow(line.toString(), getHeaderColumnTypes(fileMetaData.getColumns().size()));
@@ -58,9 +62,10 @@ public class RandomAccessFileSource extends FileSource {
 				}
 				start = byteBuffer.position();
 				line = new StringBuilder();
-			} else {
+			} else if (!delimiter.contains(String.valueOf(c))) {
 				line.append(c);
 			}
+			p = c;
 		}
 		return this;
 	}
