@@ -1,5 +1,6 @@
 package org.recxx;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Set;
@@ -25,9 +26,23 @@ public class Recxx2 {
 	
 	private static Logger LOGGER = Logger.getLogger(Recxx2.class);
 
-	public List<Destination> execute(String filePath) throws Exception {
-		RecxxConfiguration configuration = new RecxxConfiguration(filePath);
-		return execute(configuration);
+	private static final String PROPS_FILE_ENDING = ".props";
+	private static final String PROPERTIES_FILE_ENDING = ".properties";
+
+	public void execute(String filePath) throws Exception {
+		File file = new File(filePath);
+		if (file.isFile()) {
+			RecxxConfiguration configuration = new RecxxConfiguration(filePath);
+			execute(configuration);
+		}
+		else if (file.isDirectory()) {
+			for (File tempFile : file.listFiles()) {
+				if (tempFile.getAbsolutePath().endsWith(PROPERTIES_FILE_ENDING) || tempFile.getAbsolutePath().endsWith(PROPS_FILE_ENDING)) {
+					RecxxConfiguration configuration = new RecxxConfiguration(tempFile.getAbsolutePath());
+					execute(configuration);
+				}
+			}
+		}
 	}
 
 	public List<Destination> execute(RecxxConfiguration configuration) throws Exception {
