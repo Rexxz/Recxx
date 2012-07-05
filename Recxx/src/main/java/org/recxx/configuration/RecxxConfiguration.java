@@ -251,6 +251,50 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		return omitSheets;
 	}
 
+	// Database configuration
+	
+	public String configureDatabaseDriver(String alias) {
+		String databaseDriver = getString(alias + ".databaseDriver");
+		if (databaseDriver == null) {
+			throw new IllegalArgumentException("'" + alias + ".databaseDriver' not specified in configuration, " +
+					"this must be configured and available in the classpath");
+		}
+		return databaseDriver;
+	}	
+
+	public String configureDatabaseUrl(String alias) {
+		String databaseUrl = getString(alias + ".databaseUrl");
+		if (databaseUrl == null) {
+			throw new IllegalArgumentException("'" + alias + ".databaseUrl' not specified in configuration, " +
+					"this must be configured according to the driver configuration");
+		}
+		return databaseUrl;
+	}	
+	
+	public String configureDatabaseUserId(String alias) {
+		String databaseUserId = getString(alias + ".databaseUserId");
+		if (databaseUserId == null) {
+			throw new IllegalArgumentException("'" + alias + ".databaseUserId' not specified in configuration");
+		}
+		return databaseUserId;
+	}	
+
+	public String configureDatabasePassword(String alias) {
+		String databasePassword = getString(alias + ".databasePassword");
+		if (databasePassword == null) {
+			throw new IllegalArgumentException("'" + alias + ".databasePassword' not specified in configuration");
+		}
+		return databasePassword;
+	}	
+	
+	public String configureSql(String alias) {
+		String databasePassword = getString(alias + ".sql");
+		if (databasePassword == null) {
+			throw new IllegalArgumentException("'" + alias + ".sql' not specified in configuration");
+		}
+		return databasePassword;
+	}	
+	
 	@Override
 	protected void addPropertyDirect(String key, Object value) {
 		config.addProperty(key, value);					
@@ -275,8 +319,5 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	public int hashCode() {
 		return HashCodeBuilder.reflectionHashCode(this, false);
 	}
-
-
-	
 
 }
