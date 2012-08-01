@@ -79,7 +79,11 @@ public class CachedFileSource extends FileSource {
 		for (Integer index : fileMetaData.getKeyColumnIndexes()) {
 			keys.add(fields.get(index) == null ? Default.NULL : fields.get(index).toString());
 		}
-		return new Key(keys);
+		Key key = new Key(keys);
+		if (dataMap.containsKey(key)) {
+			LOGGER.warn(getAlias() + " A duplicate key was found for: " + key.toOutputString(DEFAULT_DELIMITER));
+		}
+		return key;
 	}
 	
 }

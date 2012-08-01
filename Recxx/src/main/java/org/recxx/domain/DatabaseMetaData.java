@@ -18,6 +18,8 @@ public class DatabaseMetaData {
 	private final List<String> keyColumns;
 	private final List<String> columnsToCompare;
 
+	private final List<String> dateFormats;
+
 	public static class Builder {
 		
 		 String databaseUrl;
@@ -28,7 +30,9 @@ public class DatabaseMetaData {
 
 		 List<String> keyColumns;
 		 List<String> columnsToCompare;
-		 
+
+		 List<String> dateFormats;
+
 		 public Builder databaseUrl(String databaseUrl) {
 			 this.databaseUrl = databaseUrl;
 			 return this;
@@ -59,6 +63,11 @@ public class DatabaseMetaData {
 			 return this;
 		 }
 
+		 public Builder dateFormats(List<String> dateFormats) {
+			 this.dateFormats = dateFormats;
+			 return this;
+		 }
+
 		 public Builder columnsToCompare(List<String> columnsToCompare) {
 			 this.columnsToCompare = columnsToCompare;
 			 return this;
@@ -67,6 +76,7 @@ public class DatabaseMetaData {
 		 public DatabaseMetaData build() {
 			 return new DatabaseMetaData(this);
 		 }
+		 
 	}
 	
 	private DatabaseMetaData(Builder builder) {
@@ -78,6 +88,7 @@ public class DatabaseMetaData {
 
 		this.keyColumns = builder.keyColumns;
 		this.columnsToCompare = builder.columnsToCompare;
+		this.dateFormats = builder.dateFormats;
 	}
 		
 	public String getDatabaseUrl() {
@@ -106,6 +117,10 @@ public class DatabaseMetaData {
 
 	public List<String> getColumnsToCompare() {
 		return columnsToCompare;
+	}
+
+	public List<String> getDateFormats() {
+		return dateFormats;
 	}
 
 	@Override

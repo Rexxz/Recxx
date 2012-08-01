@@ -2,6 +2,7 @@ package org.recxx.source;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.Writer;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -11,7 +12,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
@@ -39,6 +39,8 @@ public class DatabaseSource implements Source<Key> {
     private Connection connection;
     private Statement statement;
 
+	private String generatedFileName;
+
 	public DatabaseSource(String alias, DatabaseMetaData databaseMetaData) {
 		this.alias = alias;
 		this.databaseMetaData = databaseMetaData;
@@ -49,23 +51,31 @@ public class DatabaseSource implements Source<Key> {
 		ResultSet resultset = getResultset();
         LOGGER.info("Persisting data to file");
         fileMetaData = configureFileMetaData(resultset.getMetaData(), databaseMetaData);
+		writeFile(resultset);
+		resultset = null;
+		closeDB();
+		fileSource = new RandomAccessFileSource(alias, fileMetaData);
+		fileSource.call();
+		return this;
+	}
+
+	private void writeFile(ResultSet resultset) throws IOException, SQLException {
 		LOGGER.info("Writing temporary data to " + fileMetaData.getFilePath());
 		Writer fileWriter = new FileWriter(fileMetaData.getFilePath());
 		CSVWriter writer = new CSVWriter(fileWriter, fileMetaData.getDelimiter().charAt(0), CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, fileMetaData.getLineDelimiter());
 		writer.writeAll(resultset, true);
 		writer.flush();
 		writer.close();
-		closeDB();
-		fileSource = new RandomAccessFileSource(alias, fileMetaData);
-		return fileSource.call();
 	}
 	
     private void closeDB() throws SQLException {
         if (statement != null) {
         	statement.close();
+        	statement = null;
         }
         if (connection != null) {
         	connection.close();
+        	connection = null;
         }
     }
 
@@ -97,8 +107,8 @@ public class DatabaseSource implements Source<Key> {
 			Column column = new Column(resultSetMetaData.getColumnName(i+1), convert(resultSetMetaData.getColumnType(i+1)));
 			columns.add(column);
 		}
-		File tmpdir = new File(System.getProperty("java.io.tmpdir"));
-		String generatedFileName = alias + Default.FILE_DATE_FORMAT.format(new Date()) + ".psv";
+		File tmpdir = new File(FileUtils.getTempDirectoryPath());
+		generatedFileName = alias + Default.FILE_DATE_FORMAT.format(new Date()) + ".psv";
 		return new FileMetaData.Builder()
 							.filePath(new File(tmpdir, generatedFileName).getPath())
 							.keyColumns(databaseMetaData.getKeyColumns())
@@ -106,8 +116,9 @@ public class DatabaseSource implements Source<Key> {
 							.delimiter(Default.DELIMITER)
 							.lineDelimiter(Default.LINE_DELIMITER)
 							.ignoreHeaderRow(true)
+							.temporaryFile(true)
 							.columnsToCompare(databaseMetaData.getColumnsToCompare())
-							.dateFormats(Arrays.asList(Default.ISO_DATE_FORMAT.toString()))
+							.dateFormats(databaseMetaData.getDateFormats())
 							.build();		
 	}
 	
@@ -160,16 +171,11 @@ public class DatabaseSource implements Source<Key> {
 				break;
 	
 			case Types.DATE:
-				result = java.sql.Date.class;
-				break;
-	
-			case Types.TIME:
-				result = java.sql.Time.class;
-				break;
-	
 			case Types.TIMESTAMP:
-				result = java.sql.Timestamp.class;
+			case Types.TIME:
+				result = java.util.Date.class;
 				break;
+	
 		}
 
 		return result;
@@ -197,6 +203,14 @@ public class DatabaseSource implements Source<Key> {
 
 	public List<String> getCompareColumns() {
 		return fileSource.getCompareColumns();
+	}
+
+	public int getColumnIndex(String columnName) {
+		return fileSource.getColumnIndex(columnName);
+	}
+
+	public void close() {
+		fileSource.close();
 	}
 
 }

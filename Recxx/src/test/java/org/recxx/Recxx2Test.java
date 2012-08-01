@@ -115,6 +115,34 @@ public class Recxx2Test {
 		assertReconciles(fileConfig);
 	}
 
+	@Test
+	public void fileRandomAccessSourcesSameWithDateInLastField() throws Exception {
+		fileConfig.setProperty("source1.type", RandomAccessFileSource.class.getName());
+		fileConfig.setProperty("source1.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source1.filePath", Recxx2Test.class.getResource("source1DateLastField_10.csv").getPath());
+		fileConfig.setProperty("source2.type", RandomAccessFileSource.class.getName());
+		fileConfig.setProperty("source2.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source2.filePath", Recxx2Test.class.getResource("source1DateLastField_10.csv").getPath());
+		fileConfig.setProperty("dateFormats", "yyyy-MM-dd HH:mm:ss.S");
+		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
+		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
+		assertReconciles(fileConfig);
+	}
+
+	@Test
+	public void fileCachedFileSourcesSameWithDateInLastField() throws Exception {
+		fileConfig.setProperty("source1.type", CachedFileSource.class.getName());
+		fileConfig.setProperty("source1.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source1.filePath", Recxx2Test.class.getResource("source1DateLastField_10.csv").getPath());
+		fileConfig.setProperty("source2.type", CachedFileSource.class.getName());
+		fileConfig.setProperty("source2.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source2.filePath", Recxx2Test.class.getResource("source1DateLastField_10.csv").getPath());
+		fileConfig.setProperty("dateFormats", "yyyy-MM-dd HH:mm:ss.S");
+		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
+		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
+		assertReconciles(fileConfig);
+	}
+	
 	@Test(expected=ExecutionException.class)
 	public void filesDifferNoDateFormatSpecified() throws Exception {
 		fileConfig.setProperty("dateFormats", null);

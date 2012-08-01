@@ -178,7 +178,7 @@ public class ComparisonUtilsTest {
 		assertEquals(true, ComparisonUtils.compare(null, BigDecimal.valueOf(1.0123d),BigDecimal.valueOf(0),BigDecimal.valueOf(0)).isDifferent());
 	}
 	
-	@Test(expected=UnsupportedOperationException.class)
+	@Test
 	public void testIncomparables() {
 		assertEquals(true, ComparisonUtils.compare(dateOne, oneByte).isDifferent());
 	}

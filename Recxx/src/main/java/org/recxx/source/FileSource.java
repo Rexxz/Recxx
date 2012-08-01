@@ -1,5 +1,6 @@
 package org.recxx.source;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
@@ -28,17 +29,21 @@ public abstract class FileSource implements Source<Key> {
 	private static final String READ_ONLY = "r";
 
 	protected FileMetaData fileMetaData;
-	protected final RandomAccessFile randomAccessFile;
-	protected final MappedByteBuffer byteBuffer;
+	protected RandomAccessFile randomAccessFile;
+	protected MappedByteBuffer byteBuffer;
 	protected final ConvertUtilsBean convertUtilsBean;
 	private final String alias;
+
+	private FileChannel channel;
 	
 	protected FileSource(String alias, FileMetaData metaData) {
 		this.alias = alias;
 		this.fileMetaData = metaData;
 		try {
 			this.randomAccessFile = new RandomAccessFile(fileMetaData.getFilePath(), READ_ONLY);
-			this.byteBuffer = randomAccessFile.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, randomAccessFile.length());
+			this.channel = randomAccessFile.getChannel();
+			this.byteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, randomAccessFile.length());
+//			this.byteBuffer = randomAccessFile.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, randomAccessFile.length());
 			this.convertUtilsBean = new ConvertUtilsBean();
 			DateTimeConverter dtConverter = new DateConverter();
 			dtConverter.setPatterns(fileMetaData.getDateFormats().toArray(new String[fileMetaData.getDateFormats().size()]));
@@ -110,5 +115,23 @@ public abstract class FileSource implements Source<Key> {
 		return fileMetaData.getColumnsToCompare();
 	}
 	
+	public int getColumnIndex(String name) {
+		return fileMetaData.getColumnNames().indexOf(name);
+	}
+	
+	public void close() {
+		try {
+			randomAccessFile.close(); 	randomAccessFile = null;
+			channel.close(); 			channel = null;
+			byteBuffer = null;
+			System.gc();
+			File file = new File(fileMetaData.getFilePath());
+			if (fileMetaData.isTemporaryFile() && file.exists() ) {
+				file.delete();
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
 	
 }

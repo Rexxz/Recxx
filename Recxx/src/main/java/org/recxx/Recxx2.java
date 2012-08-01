@@ -117,13 +117,15 @@ public class Recxx2 {
 						compareColumns1.contains(columnName)) {
 					
 					Object field1 = row1.get(i);
+					int source2ColumnIndex = source2.getColumnIndex(columnName);
 					
-					if (keyExistsInBothSources  && i < row2.size() &&
+					if (keyExistsInBothSources  && source2ColumnIndex >= 0 && 
 							(compareColumns2.contains(Default.ALL_COLUMNS) ||
-								compareColumns2.contains(columnName))) {
+							compareColumns2.contains(columnName)) && 
+							row2.size() >  source2ColumnIndex ) {
 						
-						Object field2 = row2.get(i);
-						try {
+						
+						Object field2 = row2.get(source2ColumnIndex);
 							ComparisonResult comparison = ComparisonUtils.compare(field1, 
 									field2,
 									smallestAbsoluteValue,
@@ -143,10 +145,6 @@ public class Recxx2 {
 								writeDifference(destinations, difference);
 								matchedRow = false;
 							}
-						} catch (UnsupportedOperationException e) {
-							LOGGER.error("A problem occurred with the comparison of the following Key: '" + key.toOutputString(Default.COMMA) + "' column " + source1.getColumns().get(i).getName()  
-										+ ", which attempted to compare '" + field1 + "' with '" + field2 + "'");
-						}
 					}
 					else  {
 						Difference difference = new Difference.Builder()
@@ -236,6 +234,9 @@ public class Recxx2 {
         
         close(destinations);
 
+        source1.close();
+        source2.close();
+        
         LOGGER.info("Memory used: " + SystemUtils.memoryUsed() + "%");
         LOGGER.info("Compare complete in " + ((System.currentTimeMillis() - t) / 1000d) +"s");
         

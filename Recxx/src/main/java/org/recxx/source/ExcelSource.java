@@ -6,7 +6,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,6 +63,7 @@ public class ExcelSource implements Source<Key> {
 			else {
 				
 				LOGGER.info(alias + ": Mapping " + sheet.getSheetName());
+				int coordinateCount = 0;
 				
 				for(Row row : sheet) {
 				
@@ -73,11 +73,17 @@ public class ExcelSource implements Source<Key> {
 			    				!type.equals(ExcelType.FORMAT) ) {
 			    			
 			    			Key key = new Key(Arrays.asList(sheet.getSheetName(), Integer.toString(row.getRowNum() + 1), type.name()));
-			    			ExcelCoordinates coordinates = new ExcelCoordinates(sheet.getSheetName(), row.getRowNum(), type);
-			    			coordinatesMap.put(key, coordinates);
+
+			    			if (rowContainsData(row)) {
+			    				ExcelCoordinates coordinates = new ExcelCoordinates(sheet.getSheetName(), row.getRowNum(), type);
+			    				coordinatesMap.put(key, coordinates);
+			    				coordinateCount++;
+			    			}
 			    		}
 					}
 				}
+				LOGGER.info(alias + ": Mapped " + sheet.getSheetName() + " : " + coordinateCount);
+				
 		    }
 		}
 		LOGGER.info(alias + ": Mapping complete " + coordinatesMap.size() + " keys loaded");
@@ -89,6 +95,31 @@ public class ExcelSource implements Source<Key> {
 		}
 
 		return this;
+	}
+
+	private boolean rowContainsData(Row row) {
+		boolean containsData = false;
+
+		for (Cell cell : row) {
+			if (cell != null) {
+				switch (cell.getCellType()) {
+				case Cell.CELL_TYPE_STRING:
+					if (cell.getRichStringCellValue().getString() != null && !cell.getRichStringCellValue().getString().isEmpty()) {
+						containsData = true;
+					}
+					break;
+				case Cell.CELL_TYPE_NUMERIC:
+					break;
+				case Cell.CELL_TYPE_BOOLEAN:
+					break;
+				case Cell.CELL_TYPE_FORMULA:
+					break;
+				default:
+				}
+				if (containsData) continue;	
+			}
+		}
+		return containsData;
 	}
 
 	public Set<Key> getKeySet() {
@@ -161,6 +192,14 @@ public class ExcelSource implements Source<Key> {
 
 	public List<String> getCompareColumns() {
 		return Arrays.asList(Default.ALL_COLUMNS); //?
+	}
+
+	public int getColumnIndex(String columnName) {
+		return CellReference.convertColStringToIndex(columnName);
+	}
+
+	public void close() {
+		
 	}
 
 }

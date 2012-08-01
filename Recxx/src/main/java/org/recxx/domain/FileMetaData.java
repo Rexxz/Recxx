@@ -12,6 +12,7 @@ public class FileMetaData {
 
 	private final String filePath;
 	private final boolean ignoreHeaderRow;
+	private final boolean temporaryFile;
 
 	private final String delimiter;
 	private final String lineDelimiter;
@@ -21,11 +22,13 @@ public class FileMetaData {
 	private final List<String> dateFormats;
 	private final List<Integer> keyColumnIndexes;
 	private final List<Column> columns;
+	private final List<String> columnNames;
 
 	public static class Builder {
 		
 		 String filePath;
 		 boolean ignoreHeaderRow;
+		 boolean temporaryFile;
 
 		 String delimiter;
 		 String lineDelimiter;
@@ -74,6 +77,11 @@ public class FileMetaData {
 			 this.ignoreHeaderRow = ignoreHeaderRow;
 			 return this;
 		 }
+
+		 public Builder temporaryFile(boolean temporaryFile) {
+			 this.temporaryFile = temporaryFile;
+			 return this;
+		 }
 		 
 		 public FileMetaData build() {
 			 return new FileMetaData(this);
@@ -88,8 +96,10 @@ public class FileMetaData {
 		this.delimiter = builder.delimiter;
 		this.lineDelimiter = builder.lineDelimiter;
 		this.ignoreHeaderRow = builder.ignoreHeaderRow;
+		this.temporaryFile = builder.temporaryFile;
 		this.keyColumnIndexes = generateKeyColumnIndexes(builder.keyColumns, builder.columns);
 		this.columnsToCompare = generateColumnsToCompare(builder.columnsToCompare, builder.keyColumns, builder.columns);			
+		this.columnNames = generateColumnNames(builder.columns);
 	}
 		
 	public String getFilePath() {
@@ -128,11 +138,11 @@ public class FileMetaData {
 		return ignoreHeaderRow;
 	}
 
+	public boolean isTemporaryFile() {
+		return temporaryFile;
+	}
+	
 	public List<String> getColumnNames() {
-		List<String> columnNames = new ArrayList<String>();
-		for (Column column : this.columns) {
-			columnNames.add(column.getName());
-		}
 		return columnNames;
 	}
 
@@ -172,7 +182,18 @@ public class FileMetaData {
 		}
 		return columnsToCompare;
 	}
-	
+
+	private List<String> generateColumnNames(List<Column> columns) {
+		List<String> columnNames = new ArrayList<String>();
+		if (columns != null) {
+			for (Column column : columns) {
+				columnNames.add(column.getName());
+			}	
+		}
+		return columnNames;
+	}
+
+
 	public static FileMetaData valueOf(FileMetaData fileMetaData, List<?> columnNames) {
 		List<Column> columns = new ArrayList<Column>();
 		for (int i = 0; i < fileMetaData.getColumnTypes().size(); i++) {

@@ -52,7 +52,7 @@ public class RandomAccessFileSource extends FileSource {
 				else {
 					if (line.length() != 0) {
 						Key key = createKey(line.toString());
-						Coordinates coordinates = Coordinates.valueOf(start, byteBuffer.position() - 1);
+						Coordinates coordinates = Coordinates.valueOf(start, byteBuffer.position() - delimiter.length());
 						keyMap.put(key, coordinates);
 						i++;
 						if (i % 10000 == 0) {
@@ -67,6 +67,7 @@ public class RandomAccessFileSource extends FileSource {
 			}
 			p = c;
 		}
+		LOGGER.info("Processed " + i + " rows");
 		return this;
 	}
 
@@ -79,7 +80,7 @@ public class RandomAccessFileSource extends FileSource {
 		StringBuilder builder = new StringBuilder(coords.end - coords.start);
 		
 		builder = new StringBuilder();
-		for (int i = coords.start; i <= coords.end; i++) {
+		for (int i = coords.start; i < coords.end; i++) {
 			builder.append((char) byteBuffer.get(i));
 		}
 		return parseRow(builder.toString(), fileMetaData.getColumnTypes());
@@ -91,6 +92,10 @@ public class RandomAccessFileSource extends FileSource {
 		for (Integer index : fileMetaData.getKeyColumnIndexes()) {
 			keys.add(fields.get(index) == null ? Default.NULL : fields.get(index).toString());
 		}
-		return new Key(keys);
+		Key key = new Key(keys);
+		if (keyMap.containsKey(key)) {
+			LOGGER.warn(getAlias() + " A duplicate key was found for: " + key.toOutputString(DEFAULT_DELIMITER));
+		}
+		return key;
 	}
 }
