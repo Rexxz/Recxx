@@ -24,7 +24,7 @@ public class FileSourceTest {
 
 	private static Logger LOGGER = Logger.getLogger(FileSourceTest.class); 
 
-	private static final int FILE_ROW_COUNT = 100000;
+	private static final int FILE_ROW_COUNT = 1000;
 	private static String filePath = System.getProperty("java.io.tmpdir") + 
 								System.getProperty("file.separator") +
 								"test.csv";
