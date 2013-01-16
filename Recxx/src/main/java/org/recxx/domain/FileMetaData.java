@@ -11,6 +11,7 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 public class FileMetaData {
 
 	private final String filePath;
+	private final String encoding;
 	private final boolean ignoreHeaderRow;
 	private final boolean temporaryFile;
 
@@ -23,10 +24,12 @@ public class FileMetaData {
 	private final List<Integer> keyColumnIndexes;
 	private final List<Column> columns;
 	private final List<String> columnNames;
+	private final List<String> columnsToIgnore;
 
 	public static class Builder {
 		
 		 String filePath;
+		 String encoding;
 		 boolean ignoreHeaderRow;
 		 boolean temporaryFile;
 
@@ -37,9 +40,15 @@ public class FileMetaData {
 		 List<String> columnsToCompare;
 		 List<String> dateFormats;
 		 List<Column> columns;
+		 List<String> columnsToIgnore;
 		 
 		 public Builder filePath(String filePath) {
 			 this.filePath = filePath;
+			 return this;
+		 }
+
+		 public Builder encoding(String encoding) {
+			 this.encoding = encoding;
 			 return this;
 		 }
 
@@ -83,6 +92,11 @@ public class FileMetaData {
 			 return this;
 		 }
 		 
+		 public Builder columnsToIgnore(List<String> columnsToIgnore) {
+			 this.columnsToIgnore = columnsToIgnore;
+			 return this;
+		 }
+		 
 		 public FileMetaData build() {
 			 return new FileMetaData(this);
 		 }
@@ -90,6 +104,7 @@ public class FileMetaData {
 	
 	private FileMetaData(Builder builder) {
 		this.filePath = builder.filePath;
+		this.encoding = builder.encoding;
 		this.keyColumns = builder.keyColumns;
 		this.columns = builder.columns;
 		this.dateFormats = builder.dateFormats;
@@ -98,7 +113,8 @@ public class FileMetaData {
 		this.ignoreHeaderRow = builder.ignoreHeaderRow;
 		this.temporaryFile = builder.temporaryFile;
 		this.keyColumnIndexes = generateKeyColumnIndexes(builder.keyColumns, builder.columns);
-		this.columnsToCompare = generateColumnsToCompare(builder.columnsToCompare, builder.keyColumns, builder.columns);			
+		this.columnsToIgnore = builder.columnsToIgnore;			
+		this.columnsToCompare = generateColumnsToCompare(builder.columnsToCompare, builder.columnsToIgnore, builder.keyColumns, builder.columns);			
 		this.columnNames = generateColumnNames(builder.columns);
 	}
 		
@@ -106,6 +122,10 @@ public class FileMetaData {
 		return filePath;
 	}
 
+	public String getEncoding() {
+		return encoding;
+	}
+	
 	public List<String> getKeyColumns() {
 		return keyColumns;
 	}
@@ -146,6 +166,10 @@ public class FileMetaData {
 		return columnNames;
 	}
 
+	public List<String> getColumnsToIgnore() {
+		return columnsToIgnore;
+	}
+	
 	public List<Class<?>> getColumnTypes() {
 		List<Class<?>> types = new ArrayList<Class<?>>();
 		for (Column column : this.columns) {
@@ -168,14 +192,16 @@ public class FileMetaData {
 	}
 	
 	private List<String> generateColumnsToCompare(List<String> columnsToCompare,
+												List<String> columnsToIgnore,
 												List<String> keyColumns, 
 												List<Column> columns) {
 		if (keyColumns != null & columns != null) {
 			if (columnsToCompare == null || columnsToCompare.isEmpty()) {
 				columnsToCompare = new ArrayList<String>();
 				for (int i = 0; i < columns.size(); i++) {
-					if (!keyColumns.contains(columns.get(i).getName())) {
-						columnsToCompare.add(columns.get(i).getName());
+					String columnName = columns.get(i).getName();
+					if (!keyColumns.contains(columnName) && columnsToIgnore != null && !columnsToIgnore.contains(columnName)) {
+						columnsToCompare.add(columnName);
 					}
 				}
 			}
@@ -201,6 +227,7 @@ public class FileMetaData {
 		} 
 		return new FileMetaData.Builder()
 						.columns(columns)
+						.columnsToIgnore(fileMetaData.getColumnsToIgnore())
 						.columnsToCompare(fileMetaData.getColumnsToCompare())
 						.dateFormats(fileMetaData.getDateFormats())
 						.delimiter(fileMetaData.getDelimiter())

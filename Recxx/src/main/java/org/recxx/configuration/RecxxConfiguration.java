@@ -2,15 +2,21 @@ package org.recxx.configuration;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import org.apache.commons.configuration.AbstractConfiguration;
 import org.apache.commons.configuration.CombinedConfiguration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.DatabaseConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -20,11 +26,12 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.log4j.Logger;
 import org.recxx.destination.ConsoleDestination;
 import org.recxx.domain.Column;
+import org.recxx.domain.DatabaseMetaData;
 import org.recxx.domain.Default;
 import org.recxx.factory.DestinationFactory;
 import org.recxx.factory.SourceFactory;
-import org.recxx.source.FileSource;
 import org.recxx.utils.ComparisonUtils;
+import org.recxx.utils.DriverManagerWrappedDataSource;
 
 public class RecxxConfiguration extends AbstractConfiguration {
 
@@ -40,13 +47,29 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		this(new PropertiesConfiguration(filePath));
 	}
 
-	public RecxxConfiguration(AbstractConfiguration propertiesConfig) {
-		SystemConfiguration systemConfig = new SystemConfiguration();
+	public RecxxConfiguration(AbstractConfiguration configuration) {
 		config = new CombinedConfiguration();
-		config.addConfiguration(systemConfig);
-		config.addConfiguration(propertiesConfig);
+		config.addConfiguration(new SystemConfiguration());
+		config.addConfiguration(configuration);
 	}
-
+	
+	public RecxxConfiguration(DataSource dataSource, String configName) throws ConfigurationException {
+		config = new CombinedConfiguration();
+		config.addConfiguration(new SystemConfiguration());
+		DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(dataSource, Default.DATABASE_CONFIG_TABLE, Default.CONFIG_NAME, Default.CONFIG_KEY, Default.CONFIG_VALUE, configName);
+		config.addConfiguration(databaseConfiguration);
+	}
+	
+	public RecxxConfiguration(String configName, String alias, PropertiesConfiguration configuration) throws ConfigurationException {
+		config = new CombinedConfiguration();
+		config.addConfiguration(new SystemConfiguration());
+		config.addConfiguration(configuration);
+		DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(getDataSource(alias), Default.DATABASE_CONFIG_TABLE, Default.CONFIG_NAME, Default.CONFIG_KEY, Default.CONFIG_VALUE, configName);
+		PropertiesConfiguration pc = new PropertiesConfiguration();
+		pc.copy(databaseConfiguration);
+		config.addConfiguration(pc);
+	}
+	
 	public boolean containsKey(String key) {
 		return config.containsKey(key);
 	}
@@ -86,8 +109,26 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		return strings;
 	}
 	
+	public String configureSubject() {
+		return getString("SUBJECT");
+	}
+
+	public Date configureBusinessDate() {
+		Date returnDate = null;
+		try {
+			SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyyMMdd");
+			String dateString = getString("BUSINESS_DATE");
+			if (dateString != null) {
+				returnDate = simpleDateFormat.parse(dateString);
+			}
+		} catch (ParseException e) {
+			LOGGER.warn("'businessDate' should be supplied in the following format: 'yyyyMMdd'");
+		}
+		return returnDate;
+	}
+
 	public String configureDelimiter(String alias) {
-		return getString(alias + ".delimiter", FileSource.DEFAULT_DELIMITER);
+		return getString(alias + ".delimiter", Default.COMMA);
 	}
 
 	public List<String> configureDateFormats(String alias) {
@@ -120,6 +161,10 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		return filePath;
 	}
 	
+	public String configureFileEncoding(String alias) {
+		return getString(alias + ".encoding");
+	}
+
 	public String configureFilePathCheckExists(String alias) {
 		String filePath = configureFilePath(alias);
 		File file = new File(filePath);
@@ -154,7 +199,12 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		}
 		return columnsToCompare;
 	}
-	
+
+	public List<String> configureColumnsToIgnore(String alias) {
+		List<String> columnsToIgnore = getStrings(alias + ".columnsToIgnore");
+		return columnsToIgnore;
+	}
+
 	public List<String> configureKeyColumns(String alias) {
 		List<String> keyColumns = getStrings(alias + ".keyColumns");
 		if (keyColumns.isEmpty()) {
@@ -173,7 +223,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		}
 		List<Column> columnDefinitions = new ArrayList<Column>();
 		for (String column : columns) {
-			String[] split = column.split("\\" + FileSource.DEFAULT_COLUMN_NAME_TYPE_SEPARATOR);
+			String[] split = column.split("\\" + Default.PIPE_DELIMITER);
 			String columnName; String columnType; 
 			switch (split.length) {
 				case 2:	
@@ -189,7 +239,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 				default:
 					throw new IllegalArgumentException("'" + alias + ".columns' incorrectly specified in configuration, " +
 							"this component must have columns, configured using '<alias>.columns=<name>|<type>, <name>|<type>...'," +
-							" column definition '" + column + "' cannot be split without separator '" + FileSource.DEFAULT_COLUMN_NAME_TYPE_SEPARATOR + "'");
+							" column definition '" + column + "' cannot be split without separator '" + Default.PIPE_DELIMITER + "'");
 			} 
 			
 			Class<?> clazz = classAbbreviationMap.get(columnType);
@@ -253,40 +303,76 @@ public class RecxxConfiguration extends AbstractConfiguration {
 
 	// Database configuration
 	
-	public String configureDatabaseDriver(String alias) {
-		String databaseDriver = getString(alias + ".databaseDriver");
+	public String configureDatabaseDriver(String... aliases) {
+		String databaseDriver = null;
+		for (String alias : aliases) {
+			databaseDriver = getString(alias + ".driverClassName");
+			if (databaseDriver != null) break;
+		}
 		if (databaseDriver == null) {
-			throw new IllegalArgumentException("'" + alias + ".databaseDriver' not specified in configuration, " +
-					"this must be configured and available in the classpath");
+			StringBuilder sb = new StringBuilder();
+			for (String alias : aliases) {
+				sb.append(sb.length() != 0 ? " OR " : "");
+				sb.append("'").append(alias).append(".driverClassName' not specified in configuration");
+			}
+			sb.append(", this must be configured and available in the classpath");
+			throw new IllegalArgumentException(sb.toString());
 		}
 		return databaseDriver;
 	}	
-
-	public String configureDatabaseUrl(String alias) {
-		String databaseUrl = getString(alias + ".databaseUrl");
+	
+	public String configureDatabaseUrl(String... aliases) {
+		String databaseUrl = null;
+		for (String alias : aliases) {
+			databaseUrl = getString(alias + ".url");
+			if (databaseUrl != null) break;
+		}
 		if (databaseUrl == null) {
-			throw new IllegalArgumentException("'" + alias + ".databaseUrl' not specified in configuration, " +
-					"this must be configured according to the driver configuration");
+			StringBuilder sb = new StringBuilder();
+			for (String alias : aliases) {
+				sb.append(sb.length() != 0 ? " OR " : "");
+				sb.append("'").append(alias).append(".url' not specified in configuration");
+			}
+			sb.append(", this must be configured according to the driver configuration");
+			throw new IllegalArgumentException(sb.toString());
 		}
 		return databaseUrl;
 	}	
-	
-	public String configureDatabaseUserId(String alias) {
-		String databaseUserId = getString(alias + ".databaseUserId");
+
+	public String configureDatabaseUserId(String... aliases) {
+		String databaseUserId = null;
+		for (String alias : aliases) {
+			databaseUserId = getString(alias + ".username");
+			if (databaseUserId != null) break;
+		}
 		if (databaseUserId == null) {
-			throw new IllegalArgumentException("'" + alias + ".databaseUserId' not specified in configuration");
+			StringBuilder sb = new StringBuilder();
+			for (String alias : aliases) {
+				sb.append(sb.length() != 0 ? " OR " : "");
+				sb.append("'").append(alias).append(".username' not specified in configuration");
+			}
+			throw new IllegalArgumentException(sb.toString());
 		}
 		return databaseUserId;
 	}	
 
-	public String configureDatabasePassword(String alias) {
-		String databasePassword = getString(alias + ".databasePassword");
+	public String configureDatabasePassword(String... aliases) {
+		String databasePassword = null;
+		for (String alias : aliases) {
+			databasePassword = getString(alias + ".password");
+			if (databasePassword != null) break;
+		}
 		if (databasePassword == null) {
-			throw new IllegalArgumentException("'" + alias + ".databasePassword' not specified in configuration");
+			StringBuilder sb = new StringBuilder();
+			for (String alias : aliases) {
+				sb.append(sb.length() != 0 ? " OR " : "");
+				sb.append("'").append(alias).append(".password' not specified in configuration");
+			}
+			throw new IllegalArgumentException(sb.toString());
 		}
 		return databasePassword;
 	}	
-	
+
 	public String configureSql(String alias) {
 		String databasePassword = getString(alias + ".sql");
 		if (databasePassword == null) {
@@ -294,7 +380,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		}
 		return databasePassword;
 	}	
-	
+
 	@Override
 	protected void addPropertyDirect(String key, Object value) {
 		config.addProperty(key, value);					
@@ -319,5 +405,16 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	public int hashCode() {
 		return HashCodeBuilder.reflectionHashCode(this, false);
 	}
+
+	public DataSource getDataSource(String alias) {
+		DatabaseMetaData databaseMetaData = new DatabaseMetaData.Builder()
+			.databaseDriver(configureDatabaseDriver(alias))
+			.databaseUrl(configureDatabaseUrl(alias))
+			.databaseUserId(configureDatabaseUserId(alias))
+			.databasePassword(configureDatabasePassword(alias))
+			.build();	
+		return new DriverManagerWrappedDataSource(databaseMetaData);
+	}
+
 
 }

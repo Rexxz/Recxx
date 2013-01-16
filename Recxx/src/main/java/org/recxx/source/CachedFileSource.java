@@ -25,9 +25,9 @@ public class CachedFileSource extends FileSource {
 		StringBuilder line = new StringBuilder();
 		boolean isFirstRow = true;
 		boolean isIgnoreHeaderRow = fileMetaData.isIgnoreHederRow();
-		String delimiter = fileMetaData.getLineDelimiter();
+		String delimiter = getRowDelimiter();
 		
-		LOGGER.info("Loading file: " + fileMetaData.getFilePath());
+		LOGGER.info("Source '" + getAlias() + "': Loading file: " + fileMetaData.getFilePath());
 		boolean columnNamesNotSupplied = fileMetaData.getColumnNames().contains(Default.UNKNOWN_COLUMN_NAME);
 		if (columnNamesNotSupplied) {
 			isIgnoreHeaderRow = true;
@@ -36,7 +36,7 @@ public class CachedFileSource extends FileSource {
 		int i = 0;
 		char p = ' ';
 		while (byteBuffer.hasRemaining()) {
-			char c = (char) byteBuffer.get();
+			char c = decodeSingleByteToChar(byteBuffer.get());
 			if ( delimiter.length() == 1 && isCurrentLineDelimiter(delimiter, c)
 					|| (delimiter.length() == 2 && isCurrentLineDelimiter(delimiter, p, c)) 
 					|| !byteBuffer.hasRemaining() ) {
@@ -49,20 +49,22 @@ public class CachedFileSource extends FileSource {
 				}
 				else {
 					if (line.length() != 0) {
+						// Key & List fields
 						List<?> fields = parseRow(line.toString(), fileMetaData.getColumnTypes());
-						dataMap.put(createKey(fields), fields);
+						dataMap.put(createKey(fields, line.toString()), fields);
 						i++;
 						if (i % 10000 == 0) {
-							LOGGER.info("Loaded " + i + " rows");
+							LOGGER.info("Source '" + getAlias() + "':Loaded " + i + " rows");
 						}
 					}
 				}
-				line = new StringBuilder();
+				line.setLength(0);
 			} else if (!delimiter.contains(String.valueOf(c))) {
 				line.append(c);
 			}
 			p = c;
 		}
+		LOGGER.info("Source '" + getAlias() + "': Loaded " + i + " rows");
 		return this;
 	}
 
@@ -74,16 +76,28 @@ public class CachedFileSource extends FileSource {
 		return dataMap.get(key);
 	}
 	
-	private Key createKey(List<?> fields) {
+	private Key createKey(List<?> fields, String line) {
 		List<String> keys =  new ArrayList<String>();
-		for (Integer index : fileMetaData.getKeyColumnIndexes()) {
-			keys.add(fields.get(index) == null ? Default.NULL : fields.get(index).toString());
-		}
-		Key key = new Key(keys);
-		if (dataMap.containsKey(key)) {
-			LOGGER.warn(getAlias() + " A duplicate key was found for: " + key.toOutputString(DEFAULT_DELIMITER));
+		Key key = null;
+		try {
+			for (Integer index : fileMetaData.getKeyColumnIndexes()) {
+				keys.add(fields.get(index) == null ? Default.NULL : fields.get(index).toString());
+			}
+			key = new Key(keys);
+			if (dataMap.containsKey(key)) {
+				LOGGER.warn("Source '" + getAlias() + "': A duplicate key was found for: " + key.toOutputString(Default.COMMA) + " will suffix with a unique id");
+				int i = 0;
+				Key suffixedKey = new Key(key.toString() + "_" + i);
+				while (dataMap.containsKey(suffixedKey)) {
+					i++;
+					suffixedKey = new Key(key.toString() + "_" + i);
+				}
+				key = suffixedKey;
+			}
+		} catch (Exception e) {
+			LOGGER.error("Source '" + getAlias() + "': An error occurred trying to extract a key from the following line: '" + line + "'");
 		}
 		return key;
 	}
-	
+
 }

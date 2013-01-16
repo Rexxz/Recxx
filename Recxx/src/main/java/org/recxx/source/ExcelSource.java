@@ -194,6 +194,10 @@ public class ExcelSource implements Source<Key> {
 		return Arrays.asList(Default.ALL_COLUMNS); //?
 	}
 
+	public List<String> getIgnoreColumns() {
+		return Arrays.asList(""); //?
+	}
+
 	public int getColumnIndex(String columnName) {
 		return CellReference.convertColStringToIndex(columnName);
 	}
@@ -201,5 +205,6 @@ public class ExcelSource implements Source<Key> {
 	public void close() {
 		
 	}
+
 
 }

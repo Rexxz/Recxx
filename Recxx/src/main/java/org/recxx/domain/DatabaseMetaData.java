@@ -1,5 +1,6 @@
 package org.recxx.domain;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -17,6 +18,7 @@ public class DatabaseMetaData {
 
 	private final List<String> keyColumns;
 	private final List<String> columnsToCompare;
+	private final List<String> columnsToIgnore;
 
 	private final List<String> dateFormats;
 
@@ -30,6 +32,7 @@ public class DatabaseMetaData {
 
 		 List<String> keyColumns;
 		 List<String> columnsToCompare;
+		 List<String> columnsToIgnore;
 
 		 List<String> dateFormats;
 
@@ -73,6 +76,11 @@ public class DatabaseMetaData {
 			 return this;
 		 }
 		 
+		 public Builder columnsToIgnore(List<String> columnsToIgnore) {
+			 this.columnsToIgnore = columnsToIgnore;
+			 return this;
+		 }
+
 		 public DatabaseMetaData build() {
 			 return new DatabaseMetaData(this);
 		 }
@@ -87,10 +95,12 @@ public class DatabaseMetaData {
 		this.sql = builder.sql;
 
 		this.keyColumns = builder.keyColumns;
-		this.columnsToCompare = builder.columnsToCompare;
+		this.columnsToCompare = builder.columnsToCompare == null ? Arrays.asList(Default.ALL_COLUMNS) : builder.columnsToCompare;
+		this.columnsToIgnore = builder.columnsToIgnore;
 		this.dateFormats = builder.dateFormats;
 	}
 		
+
 	public String getDatabaseUrl() {
 		return databaseUrl;
 	}
@@ -117,6 +127,10 @@ public class DatabaseMetaData {
 
 	public List<String> getColumnsToCompare() {
 		return columnsToCompare;
+	}
+
+	public List<String> getColumnsToIgnore() {
+		return columnsToIgnore;
 	}
 
 	public List<String> getDateFormats() {

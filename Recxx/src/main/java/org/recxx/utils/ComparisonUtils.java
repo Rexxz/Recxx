@@ -26,7 +26,9 @@ public class ComparisonUtils {
 	}
 	
 	public static BigDecimal percentageMatch(BigDecimal o1, BigDecimal o2) {
-		if (o2.compareTo(BigDecimal.ZERO) == 0) return BigDecimal.ZERO;
+		if (o1.compareTo(o2) == 0) return BigDecimal.valueOf(1);
+		if ((o1.compareTo(BigDecimal.ZERO) == 0 && o2.compareTo(BigDecimal.ZERO) != 0) ||
+				(o1.compareTo(BigDecimal.ZERO) != 0 && o2.compareTo(BigDecimal.ZERO) == 0)) return BigDecimal.ZERO;
 		return (o1).divide(o2, 6, RoundingMode.HALF_UP);
 	}
 	

@@ -27,9 +27,9 @@ public class RandomAccessFileSource extends FileSource {
 		int start = 0;
 		boolean isFirstRow = true;
 		boolean isIgnoreHeaderRow = fileMetaData.isIgnoreHederRow();
-		String delimiter = fileMetaData.getLineDelimiter();
+		String delimiter = getRowDelimiter();
 		
-		LOGGER.info("Processing file: " + fileMetaData.getFilePath());
+		LOGGER.info("Source '" + getAlias() + "': Processing file: " + fileMetaData.getFilePath());
 		boolean columnNamesNotSupplied = fileMetaData.getColumnNames().contains(Default.UNKNOWN_COLUMN_NAME);
 		if (columnNamesNotSupplied) {
 			isIgnoreHeaderRow = true;
@@ -38,7 +38,7 @@ public class RandomAccessFileSource extends FileSource {
 		int i = 0;
 		char p = ' ';
 		while (byteBuffer.hasRemaining()) {
-			char c = (char) byteBuffer.get();
+			char c = decodeSingleByteToChar(byteBuffer.get());
 			if ( delimiter.length() == 1 && isCurrentLineDelimiter(delimiter, c)
 					|| (delimiter.length() == 2 && isCurrentLineDelimiter(delimiter, p, c)) 
 					|| !byteBuffer.hasRemaining() ) {
@@ -51,23 +51,24 @@ public class RandomAccessFileSource extends FileSource {
 				}
 				else {
 					if (line.length() != 0) {
+						// Key
 						Key key = createKey(line.toString());
 						Coordinates coordinates = Coordinates.valueOf(start, byteBuffer.position() - delimiter.length());
 						keyMap.put(key, coordinates);
 						i++;
 						if (i % 10000 == 0) {
-							LOGGER.info("Processed " + i + " rows");
+							LOGGER.info("Source '" + getAlias() + "': Processed " + i + " rows");
 						}
 					}
 				}
 				start = byteBuffer.position();
-				line = new StringBuilder();
+				line.setLength(0);
 			} else if (!delimiter.contains(String.valueOf(c))) {
 				line.append(c);
 			}
 			p = c;
 		}
-		LOGGER.info("Processed " + i + " rows");
+		LOGGER.info("Source '" + getAlias() + "': Processed " + i + " rows");
 		return this;
 	}
 
@@ -81,20 +82,32 @@ public class RandomAccessFileSource extends FileSource {
 		
 		builder = new StringBuilder();
 		for (int i = coords.start; i < coords.end; i++) {
-			builder.append((char) byteBuffer.get(i));
+			builder.append(decodeSingleByteToChar(byteBuffer.get(i)));
 		}
 		return parseRow(builder.toString(), fileMetaData.getColumnTypes());
 	}
-	
+
 	private Key createKey(String line) {
 		List<?> fields = parseRow(line, fileMetaData.getColumnTypes());
 		List<String> keys =  new ArrayList<String>();
-		for (Integer index : fileMetaData.getKeyColumnIndexes()) {
-			keys.add(fields.get(index) == null ? Default.NULL : fields.get(index).toString());
-		}
-		Key key = new Key(keys);
-		if (keyMap.containsKey(key)) {
-			LOGGER.warn(getAlias() + " A duplicate key was found for: " + key.toOutputString(DEFAULT_DELIMITER));
+		Key key = null;
+		try {
+			for (Integer index : fileMetaData.getKeyColumnIndexes()) {
+				keys.add(fields.get(index) == null ? Default.NULL : fields.get(index).toString());
+			}
+			key = new Key(keys);
+			if (keyMap.containsKey(key)) {
+				LOGGER.warn("Source '" + getAlias() + "': A duplicate key was found for: " + key.toOutputString(Default.COMMA) + " will suffix with a unique id");
+				int i = 0;
+				Key suffixedKey = new Key(key.toString() + "_" + i);
+				while (keyMap.containsKey(suffixedKey)) {
+					i++;
+					suffixedKey = new Key(key.toString() + "_" + i);
+				}
+				key = suffixedKey;
+			}
+		} catch (Exception e) {
+			LOGGER.error("Source '" + getAlias() + "': An error occurred trying to extract a key from the following line: '" + line + "'");
 		}
 		return key;
 	}

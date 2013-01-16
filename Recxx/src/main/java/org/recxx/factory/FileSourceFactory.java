@@ -38,11 +38,13 @@ public class FileSourceFactory implements SourceFactory {
 
 		FileMetaData fileMetaData = new FileMetaData.Builder()
 										.filePath(configuration.configureFilePathCheckExists(alias))
+										.encoding(configuration.configureFileEncoding(alias))
 										.keyColumns(configuration.configureKeyColumns(alias))
 										.columns(configuration.configureColumns(alias, classAbbreviationMap))
 										.delimiter(configuration.configureDelimiter(alias))
 										.lineDelimiter(configuration.configureLineDelimiter(alias))
 										.ignoreHeaderRow(configuration.configureIgnoreHeaderRow(alias))
+										.columnsToIgnore(configuration.configureColumnsToIgnore(alias))
 										.columnsToCompare(configuration.configureColumnsToCompare(alias))
 										.dateFormats(configuration.configureDateFormats(alias))
 										.build();		

@@ -27,7 +27,7 @@ public class CsvDestination extends AbstractDestination {
 	private BufferedWriter bufferedWriter;
 	
 	public CsvDestination (FileMetaData fileMetaData) {
-		LOGGER.warn("Writing to '" + fileMetaData.getFilePath() + "'");
+		LOGGER.info(" destination " + fileMetaData.getFilePath());
 		file = new File(fileMetaData.getFilePath());
 		if (file.exists()) {
 			LOGGER.warn("File '" + fileMetaData.getFilePath() + "' exists already, it will be deleted first!");

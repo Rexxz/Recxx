@@ -192,6 +192,26 @@ public class ComparisonUtilsTest {
 	public void testPercentageMatch() {
 		assertEquals(new BigDecimal(0.70, new MathContext(6)),ComparisonUtils.percentageMatch(new BigDecimal(70), new BigDecimal(100)));
 	}
+
+	@Test
+	public void testPercentageMatchEqual() {
+		assertEquals(BigDecimal.ONE,ComparisonUtils.percentageMatch(new BigDecimal(100), new BigDecimal(100)));
+	}
+	
+	@Test
+	public void testPercentageMatchBothZero() {
+		assertEquals(BigDecimal.ONE,ComparisonUtils.percentageMatch(BigDecimal.ZERO, BigDecimal.ZERO));
+	}
+
+	@Test
+	public void testPercentageMatchFirstZero() {
+		assertEquals(BigDecimal.ZERO,ComparisonUtils.percentageMatch(BigDecimal.ZERO, new BigDecimal(100)));
+	}
+	
+	@Test
+	public void testPercentageMatchSecondZero() {
+		assertEquals(BigDecimal.ZERO,ComparisonUtils.percentageMatch(new BigDecimal(100), BigDecimal.ZERO));
+	}
 	
 	@Test
 	public void testPercentageMatchDouble() {

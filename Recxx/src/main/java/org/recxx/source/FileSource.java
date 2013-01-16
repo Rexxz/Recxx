@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -15,17 +16,15 @@ import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.apache.log4j.Logger;
 import org.recxx.domain.Column;
+import org.recxx.domain.Default;
 import org.recxx.domain.FileMetaData;
 import org.recxx.domain.Key;
-
-import au.com.bytecode.opencsv.CSVParser;
+import org.recxx.utils.csv.CSVParser;
 
 public abstract class FileSource implements Source<Key> {
 
 	public static final Logger LOGGER = Logger.getLogger(FileSource.class);
 	
-	public static final String DEFAULT_DELIMITER = ",";
-	public static final String DEFAULT_COLUMN_NAME_TYPE_SEPARATOR = "|";
 	private static final String READ_ONLY = "r";
 
 	protected FileMetaData fileMetaData;
@@ -35,6 +34,7 @@ public abstract class FileSource implements Source<Key> {
 	private final String alias;
 
 	private FileChannel channel;
+	private Charset charset;
 	
 	protected FileSource(String alias, FileMetaData metaData) {
 		this.alias = alias;
@@ -43,7 +43,6 @@ public abstract class FileSource implements Source<Key> {
 			this.randomAccessFile = new RandomAccessFile(fileMetaData.getFilePath(), READ_ONLY);
 			this.channel = randomAccessFile.getChannel();
 			this.byteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, randomAccessFile.length());
-//			this.byteBuffer = randomAccessFile.getChannel().map(FileChannel.MapMode.READ_ONLY, 0, randomAccessFile.length());
 			this.convertUtilsBean = new ConvertUtilsBean();
 			DateTimeConverter dtConverter = new DateConverter();
 			dtConverter.setPatterns(fileMetaData.getDateFormats().toArray(new String[fileMetaData.getDateFormats().size()]));
@@ -79,15 +78,27 @@ public abstract class FileSource implements Source<Key> {
 				else {
 					try {
 						row.add(convertUtilsBean.convert(fields[i], columnTypes.get(i)));
-					} catch (ConversionException ce) {
-						throw new RuntimeException("Source '" + this.getAlias() + "' - Error attempting to convert value '" + fields[i] + 
-								"' which should be type '" + columnTypes.get(i) + "', please correct the configuration or data", ce);
+					} 
+					catch (ConversionException ce) {
+						String message = "Source '" + getAlias() + "': Error attempting to convert value '" + fields[i] + 
+								"' which should be type '" + columnTypes.get(i) + "', please correct the configuration or data";
+						LOGGER.error(message, ce);
+						throw new RuntimeException(message, ce);
+					}
+					catch (RuntimeException e) {
+						String message = "Source '" + getAlias() + "': Error attempting to parse the row '" + line + 
+								"' which should be parseable into '" + columnTypes.toString() + "', please correct the column configuration or data";
+						LOGGER.error(message, e);
+						throw new RuntimeException(message, e);
 					}
 				}
 			}
-		} catch (IOException e) {
-			throw new RuntimeException("Source '" + this.getAlias() + "' - Error attempting to parse '" + line + 
-					"', please correct the configuration or data", e);
+		} 
+		catch (IOException e) {
+			String message = "Source '" + getAlias() + "': Error attempting to parse '" + line + 
+					"', please correct the configuration or data";
+			LOGGER.error(message, e);
+			throw new RuntimeException(message, e);
 		}
 		return row;
 	}
@@ -103,6 +114,18 @@ public abstract class FileSource implements Source<Key> {
 		return false;
 	}
 
+	protected char decodeSingleByteToChar(byte b) {
+		if (fileMetaData.getEncoding() == null) {
+			return (new String(new byte[] {b})).charAt(0);
+		}
+		else {
+			if (charset == null) 
+				charset = Charset.forName(fileMetaData.getEncoding());
+			return (new String(new byte[] {b}, charset)).charAt(0); 
+		}
+		
+	}
+
 	public List<Column> getColumns() {
 		return fileMetaData.getColumns();
 	}
@@ -115,6 +138,10 @@ public abstract class FileSource implements Source<Key> {
 		return fileMetaData.getColumnsToCompare();
 	}
 	
+	public List<String> getIgnoreColumns() {
+		return fileMetaData.getColumnsToIgnore();
+	}
+	
 	public int getColumnIndex(String name) {
 		return fileMetaData.getColumnNames().indexOf(name);
 	}
@@ -124,14 +151,50 @@ public abstract class FileSource implements Source<Key> {
 			randomAccessFile.close(); 	randomAccessFile = null;
 			channel.close(); 			channel = null;
 			byteBuffer = null;
-			System.gc();
 			File file = new File(fileMetaData.getFilePath());
 			if (fileMetaData.isTemporaryFile() && file.exists() ) {
+				System.gc();
+				Thread.sleep(3000);
 				file.delete();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
 	}
+
+	protected String getRowDelimiter() {
+		int lineFeeds = 0;
+		int lineFeedCarriageReturn = 0;
+		String delimiter = Default.LINE_DELIMITER;
+		StringBuilder sb = new StringBuilder();
 	
+		byteBuffer.rewind();
+		char p = ' ';
+		while (byteBuffer.hasRemaining()) {
+			char c = decodeSingleByteToChar(byteBuffer.get());
+			if (p == Default.CARRIAGE_RETURN && c == Default.LINE_FEED) {
+				lineFeedCarriageReturn++;;
+			}
+			else if (p != Default.CARRIAGE_RETURN && c == Default.LINE_FEED) {
+				lineFeeds++;
+			}
+			p = c;
+		}
+		byteBuffer.rewind();
+
+		sb.append("Source '").append(getAlias()).append("': Auto detected line delimiter as ");
+		if (lineFeeds > lineFeedCarriageReturn) {
+			sb.append("LF (Unix)");
+			delimiter = String.valueOf(Default.LINE_FEED);
+		}
+		else if (lineFeedCarriageReturn > lineFeeds) {
+			sb.append("CR + LF (Windows)");
+			delimiter = Default.WINDOWS_LINE_DELIMITER;
+		}
+		LOGGER.info(sb.toString());
+		return delimiter;
+	}
+
 }

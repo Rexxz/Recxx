@@ -8,6 +8,7 @@ import java.util.Map;
 import org.recxx.configuration.RecxxConfiguration;
 import org.recxx.destination.ConsoleDestination;
 import org.recxx.destination.CsvDestination;
+import org.recxx.destination.DatabaseDestination;
 import org.recxx.destination.Destination;
 
 public class AbstractDestinationFactory {
@@ -17,6 +18,7 @@ public class AbstractDestinationFactory {
 	public AbstractDestinationFactory() {
 		addDestinationFactory(CsvDestination.class, new CsvDestinationFactory());
 		addDestinationFactory(ConsoleDestination.class, new ConsoleDestinationFactory());
+		addDestinationFactory(DatabaseDestination.class, new DatabaseDestinationFactory());
 	}
 
 	public List<Destination> getDestinations(RecxxConfiguration configuration) {

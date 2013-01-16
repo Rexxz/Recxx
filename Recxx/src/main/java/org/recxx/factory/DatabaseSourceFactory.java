@@ -20,6 +20,7 @@ public class DatabaseSourceFactory implements SourceFactory {
 										.sql(configuration.configureSql(alias))
 										.keyColumns(configuration.configureKeyColumns(alias))
 										.columnsToCompare(configuration.configureColumnsToCompare(alias))
+										.columnsToIgnore(configuration.configureColumnsToIgnore(alias))
 										.dateFormats(configuration.configureDateFormats(alias))
 										.build();
 

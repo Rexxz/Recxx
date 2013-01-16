@@ -24,8 +24,7 @@ import org.recxx.domain.Default;
 import org.recxx.domain.FileMetaData;
 import org.recxx.domain.Key;
 import org.recxx.utils.SystemUtils;
-
-import au.com.bytecode.opencsv.CSVWriter;
+import org.recxx.utils.csv.CSVWriter;
 
 public class DatabaseSource implements Source<Key> {
 
@@ -44,12 +43,12 @@ public class DatabaseSource implements Source<Key> {
 	public DatabaseSource(String alias, DatabaseMetaData databaseMetaData) {
 		this.alias = alias;
 		this.databaseMetaData = databaseMetaData;
-	}
-
+    }
+    
 	public Source<Key> call() throws Exception {
 		openDB();
 		ResultSet resultset = getResultset();
-        LOGGER.info("Persisting data to file");
+        LOGGER.info("Source '" + getAlias() + "': Persisting data to file");
         fileMetaData = configureFileMetaData(resultset.getMetaData(), databaseMetaData);
 		writeFile(resultset);
 		resultset = null;
@@ -60,7 +59,7 @@ public class DatabaseSource implements Source<Key> {
 	}
 
 	private void writeFile(ResultSet resultset) throws IOException, SQLException {
-		LOGGER.info("Writing temporary data to " + fileMetaData.getFilePath());
+		LOGGER.info("Source '" + getAlias() + "': Writing temporary data to " + fileMetaData.getFilePath());
 		Writer fileWriter = new FileWriter(fileMetaData.getFilePath());
 		CSVWriter writer = new CSVWriter(fileWriter, fileMetaData.getDelimiter().charAt(0), CSVWriter.NO_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, fileMetaData.getLineDelimiter());
 		writer.writeAll(resultset, true);
@@ -78,13 +77,17 @@ public class DatabaseSource implements Source<Key> {
         	connection = null;
         }
     }
-
+    
     private void openDB() throws ClassNotFoundException, SQLException {
-        LOGGER.info("Connected to DB using " + databaseMetaData.getDatabaseUrl());
+    	StringBuilder sb = new StringBuilder();
+    	LOGGER.info(sb.append("Source '").append(getAlias())
+    			.append("': Connecting to Server '").append(databaseMetaData.getDatabaseUrl())
+    			.append("', User '").append(databaseMetaData.getDatabaseUserId()).toString());
+        LOGGER.info("Connecting to DB using " + sb.toString());
     	Class.forName(databaseMetaData.getDatabaseDriver());
         connection = DriverManager.getConnection(databaseMetaData.getDatabaseUrl(), databaseMetaData.getDatabaseUserId(), databaseMetaData.getDatabasePassword());
         statement = connection.createStatement();
-        LOGGER.info("Successfully initialised the DB connections");
+        LOGGER.info("Successfully initialised the Database connection");
     }
 
 	private ResultSet getResultset() throws Exception {
@@ -92,11 +95,11 @@ public class DatabaseSource implements Source<Key> {
 		String sql = databaseMetaData.getSql();
 		File file = new File(sql);
 		if (file.exists()) {
-			LOGGER.info("File based SQL discovered, will attempt to load sql file: " + databaseMetaData.getSql());
+			LOGGER.info("Source '" + getAlias() + "': File based SQL discovered, will attempt to load sql file: " + databaseMetaData.getSql());
 			sql = FileUtils.readFileToString(file);
 			sql = SystemUtils.replaceSystemProperties(sql);
 		}
-		LOGGER.info("Running sql :" + sql);
+		LOGGER.info("Source '" + getAlias() + "': Running sql :" + sql);
 		rs = statement.executeQuery(sql);
 		return rs;
 	}
@@ -113,10 +116,11 @@ public class DatabaseSource implements Source<Key> {
 							.filePath(new File(tmpdir, generatedFileName).getPath())
 							.keyColumns(databaseMetaData.getKeyColumns())
 							.columns(columns)
-							.delimiter(Default.DELIMITER)
-							.lineDelimiter(Default.LINE_DELIMITER)
+							.delimiter(Default.PILCRO_DELIMITER)
+							.lineDelimiter(Default.WINDOWS_LINE_DELIMITER)
 							.ignoreHeaderRow(true)
 							.temporaryFile(true)
+							.columnsToIgnore(databaseMetaData.getColumnsToIgnore())
 							.columnsToCompare(databaseMetaData.getColumnsToCompare())
 							.dateFormats(databaseMetaData.getDateFormats())
 							.build();		
@@ -194,7 +198,7 @@ public class DatabaseSource implements Source<Key> {
 	}
 
 	public String getAlias() {
-		return fileSource.getAlias();
+		return alias;
 	}
 
 	public List<String> getKeyColumns() {
@@ -205,6 +209,10 @@ public class DatabaseSource implements Source<Key> {
 		return fileSource.getCompareColumns();
 	}
 
+	public List<String> getIgnoreColumns() {
+		return fileSource.getIgnoreColumns();
+	}
+
 	public int getColumnIndex(String columnName) {
 		return fileSource.getColumnIndex(columnName);
 	}
@@ -212,5 +220,6 @@ public class DatabaseSource implements Source<Key> {
 	public void close() {
 		fileSource.close();
 	}
+
 
 }

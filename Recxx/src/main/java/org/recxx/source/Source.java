@@ -20,6 +20,8 @@ public interface Source<K> extends Callable<Source<Key>> {
 	public abstract List<String> getKeyColumns();
 	
 	public abstract List<String> getCompareColumns();
+
+	public abstract List<String> getIgnoreColumns();
 	
 	public abstract int getColumnIndex(String columnName);
 
