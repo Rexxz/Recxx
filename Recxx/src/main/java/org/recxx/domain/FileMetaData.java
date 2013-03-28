@@ -7,6 +7,7 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
+import org.apache.log4j.Logger;
 
 public class FileMetaData {
 
@@ -26,6 +27,8 @@ public class FileMetaData {
 	private final List<String> columnNames;
 	private final List<String> columnsToIgnore;
 
+	public static final Logger LOGGER = Logger.getLogger(FileMetaData.class);
+	
 	public static class Builder {
 		
 		 String filePath;
@@ -222,6 +225,12 @@ public class FileMetaData {
 
 	public static FileMetaData valueOf(FileMetaData fileMetaData, List<?> columnNames) {
 		List<Column> columns = new ArrayList<Column>();
+		if (columnNames.size() != fileMetaData.getColumnTypes().size()) {
+			String message = "File '" + fileMetaData.getFilePath() + "': Error attempting to parse row '" + columnNames + 
+					"' which should be types '" + fileMetaData.getColumnTypes() + "', please correct the configuration or data";
+			LOGGER.error(message);
+			throw new RuntimeException(message);
+		}
 		for (int i = 0; i < fileMetaData.getColumnTypes().size(); i++) {
 			columns.add(new Column(columnNames.get(i).toString(), fileMetaData.getColumnTypes().get(i)));
 		} 

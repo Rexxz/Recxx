@@ -116,7 +116,7 @@ public class DatabaseSource implements Source<Key> {
 							.filePath(new File(tmpdir, generatedFileName).getPath())
 							.keyColumns(databaseMetaData.getKeyColumns())
 							.columns(columns)
-							.delimiter(Default.PILCRO_DELIMITER)
+							.delimiter(Default.PIPE_DELIMITER)
 							.lineDelimiter(Default.WINDOWS_LINE_DELIMITER)
 							.ignoreHeaderRow(true)
 							.temporaryFile(true)

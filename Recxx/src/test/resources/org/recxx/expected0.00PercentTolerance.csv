@@ -1,5 +1,4 @@
 Key: Id,column,source1.value,source2.value,% Diff,ABS Diff
-100,Id,100,Missing,,
 100,Name,Name10,Missing,,
 100,Balance,1000.0,Missing,,
 100,Date,Mon Jan 01 00:00:00 GMT 2007,Missing,,

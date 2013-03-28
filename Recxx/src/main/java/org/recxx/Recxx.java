@@ -154,16 +154,17 @@ public class Recxx {
 				String columnName = source1.getColumns().get(i).getName();
 				
 				if((compareColumns1.contains(Default.ALL_COLUMNS) || compareColumns1.contains(columnName)) 
-						&& (!ignoreColumns1.contains(columnName))) {
+						&& (!ignoreColumns1.contains(columnName))
+						&& !source1.getKeyColumns().contains(columnName)
+						&& !source2.getKeyColumns().contains(columnName)) {
 					
 					Object field1 = row1.get(i);
 					int source2ColumnIndex = source2.getColumnIndex(columnName);
 					
 					if (keyExistsInBothSources && source2ColumnIndex >= 0 
 							&& ((compareColumns2.contains(Default.ALL_COLUMNS) || compareColumns2.contains(columnName)) 
-							&& !ignoreColumns2.contains(columnName)) && 
-							row2.size() >  source2ColumnIndex ) {
-						
+							&& !ignoreColumns2.contains(columnName) ) 
+							&& row2.size() >  source2ColumnIndex ) {
 						
 						Object field2 = row2.get(source2ColumnIndex);
 							ComparisonResult comparison = ComparisonUtils.compare(field1, 
