@@ -52,7 +52,7 @@ public class RandomAccessFileSource extends FileSource {
 				else {
 					if (line.length() != 0) {
 						// Key
-						Key key = createKey(line.toString());
+						Key key = createKey(line.toString(), i);
 						Coordinates coordinates = Coordinates.valueOf(start, byteBuffer.position() - delimiter.length());
 						keyMap.put(key, coordinates);
 						i++;
@@ -87,15 +87,21 @@ public class RandomAccessFileSource extends FileSource {
 		return parseRow(builder.toString(), fileMetaData.getColumnTypes());
 	}
 
-	private Key createKey(String line) {
+	private Key createKey(String line, int lineNumber) {
 		List<?> fields = parseRow(line, fileMetaData.getColumnTypes());
 		List<String> keys =  new ArrayList<String>();
 		Key key = null;
 		try {
-			for (Integer index : fileMetaData.getKeyColumnIndexes()) {
-				keys.add(fields.get(index) == null ? Default.NULL : fields.get(index).toString());
+			if (fileMetaData.getKeyColumns().contains(Default.EMPTY_KEY_COLUMN_NAME) && 
+					fileMetaData.getKeyColumns().size() == 1) {
+				key = new Key(String.valueOf(lineNumber + 1));
 			}
-			key = new Key(keys);
+			else {
+				for (Integer index : fileMetaData.getKeyColumnIndexes()) {
+					keys.add(fields.get(index) == null ? Default.NULL : fields.get(index).toString());
+				}
+				key = new Key(keys);
+			}
 			if (keyMap.containsKey(key)) {
 				LOGGER.warn("Source '" + getAlias() + "': A duplicate key was found for: " + key.toOutputString(Default.COMMA) + " will suffix with a unique id");
 				int i = 0;

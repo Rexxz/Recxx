@@ -51,7 +51,7 @@ public class CachedFileSource extends FileSource {
 					if (line.length() != 0) {
 						// Key & List fields
 						List<?> fields = parseRow(line.toString(), fileMetaData.getColumnTypes());
-						dataMap.put(createKey(fields, line.toString()), fields);
+						dataMap.put(createKey(fields, line.toString(), i), fields);
 						i++;
 						if (i % 10000 == 0) {
 							LOGGER.info("Source '" + getAlias() + "':Loaded " + i + " rows");
@@ -76,14 +76,20 @@ public class CachedFileSource extends FileSource {
 		return dataMap.get(key);
 	}
 	
-	private Key createKey(List<?> fields, String line) {
-		List<String> keys =  new ArrayList<String>();
+	private Key createKey(List<?> fields, String line, int lineNumber) {
+		List<String> keyValues =  new ArrayList<String>();
 		Key key = null;
 		try {
-			for (Integer index : fileMetaData.getKeyColumnIndexes()) {
-				keys.add(fields.get(index) == null ? Default.NULL : fields.get(index).toString());
+			if (fileMetaData.getKeyColumns().contains(Default.EMPTY_KEY_COLUMN_NAME) && 
+					fileMetaData.getKeyColumns().size() == 1) {
+				key = new Key(String.valueOf(lineNumber + 1));
 			}
-			key = new Key(keys);
+			else {
+				for (Integer index : fileMetaData.getKeyColumnIndexes()) {
+					keyValues.add(fields.get(index) == null ? Default.NULL : fields.get(index).toString());
+				}
+				key = new Key(keyValues);
+			}
 			if (dataMap.containsKey(key)) {
 				LOGGER.warn("Source '" + getAlias() + "': A duplicate key was found for: " + key.toOutputString(Default.COMMA) + " will suffix with a unique id");
 				int i = 0;

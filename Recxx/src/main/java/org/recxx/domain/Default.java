@@ -33,6 +33,7 @@ public interface Default {
 	public static final String CONFIG_NAME = "configName";
 	public static final String DATABASE_CONFIG_TABLE = "RecxxConfig";
 	public static final String DATABASE_PREFIX = "DatabasePrefix";
-
+	
+	public static final String EMPTY_KEY_COLUMN_NAME = "recxxGeneratedRowNumber";
 	
 }

@@ -160,6 +160,24 @@ public class RecxxTest {
 		assertReconciles(fileConfig);
 	}
 	
+	@Test
+	public void fileCachedFileSourcesDifferentByIgnoredColumnWithNoKey() throws Exception {
+		fileConfig.setProperty("source1.keyColumns", null);
+		fileConfig.setProperty("source2.keyColumns", null);
+		fileConfig.setProperty("source1.type", RandomAccessFileSource.class.getName());
+		fileConfig.setProperty("source1.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source1.filePath", RecxxTest.class.getResource("source1_10.csv").getPath());
+		fileConfig.setProperty("source1.columnsToIgnore", Arrays.asList("Date"));
+		fileConfig.setProperty("source2.type", RandomAccessFileSource.class.getName());
+		fileConfig.setProperty("source2.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source2.filePath", RecxxTest.class.getResource("source2_10_DateDiffOnly.csv").getPath());
+		fileConfig.setProperty("source2.columnsToIgnore", Arrays.asList("Date"));
+		fileConfig.setProperty("dateFormats", Default.ISO_DATE_FORMAT.toLocalizedPattern());
+		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
+		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
+		assertReconciles(fileConfig);
+	}
+	
 	@Test(expected=ExecutionException.class)
 	public void filesDifferNoDateFormatSpecified() throws Exception {
 		fileConfig.setProperty("dateFormats", null);
@@ -202,4 +220,5 @@ public class RecxxTest {
 	// TODO Excel Test
 	// TODO Database Test
 
+	
 }

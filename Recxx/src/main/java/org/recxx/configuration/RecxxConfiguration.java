@@ -208,8 +208,8 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	public List<String> configureKeyColumns(String alias) {
 		List<String> keyColumns = getStrings(alias + ".keyColumns");
 		if (keyColumns.isEmpty()) {
-			throw new IllegalArgumentException("'" + alias + ".keyColumns' not specified in configuration, " +
-					"this component must have keyColumns, configured using '<alias>.keyColumns=<value>, <value>...'");
+			LOGGER.warn("'keyColumns' not supplied, row numbers will be used to key the data for the reconciliation");
+			keyColumns.add(Default.EMPTY_KEY_COLUMN_NAME);
 		}
 		return keyColumns;
 	}
