@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.recxx</groupId>
 	<artifactId>Recxx</artifactId>
-	<version>2.3.3</version>
+	<version>2.3.4</version>
 	<licenses>
 		<license>
 			<name>Apache 2</name>
@@ -29,6 +29,55 @@
           </execution>
         </executions>
       </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>2.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+
+                            <filters>
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                        <exclude>src/main/scheduling/*</exclude>
+                                        <exclude>src/main/assembly/*</exclude>
+                                        <exclude>src/main/profile/*</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
+
+							<transformers>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<manifestEntries>
+										<Main-Class>${app.mainClass}</Main-Class>
+										<Specification-Title>${project.description}</Specification-Title>
+										<Specification-Version>${project.version}</Specification-Version>
+										<Implementation-Version>r${buildNumber}</Implementation-Version>
+										<Implementation-Title>${project.name}</Implementation-Title>
+									</manifestEntries>
+								</transformer>
+							</transformers>
+							<shadedArtifactAttached>true</shadedArtifactAttached>
+							<shadedClassifierName>uber</shadedClassifierName>
+							<artifactSet>
+								<includes>
+									<include>*:*</include>
+								</includes>
+							</artifactSet>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
     </plugins>
   </build>
   <dependencies>

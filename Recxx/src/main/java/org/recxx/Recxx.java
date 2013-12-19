@@ -36,10 +36,12 @@ public class Recxx {
 	private static final String PROPERTIES_FILE_ENDING = ".properties";
 
 	private String configName;
+	
+	private int reconciliationDifferences = 0;
 
 	public enum ConfigType { FILE, DATABASE } ;
 	
-	public void execute(String filePath) throws Exception {
+	public int execute(String filePath) throws Exception {
 		File file = new File(filePath);
 		if (file.isFile()) {
 			RecxxConfiguration configuration = new RecxxConfiguration(filePath);
@@ -55,15 +57,17 @@ public class Recxx {
 				}
 			}
 		}
+		return reconciliationDifferences;
 	}
 
-	public void execute(String filePath, String alias, String configName) throws Exception {
+	public int execute(String filePath, String alias, String configName) throws Exception {
 		this.configName = configName;
 		PropertiesConfiguration propertiesConfiguration = new PropertiesConfiguration(filePath);
 		propertiesConfiguration.addProperty(Default.DATABASE_PREFIX, alias);
 		RecxxConfiguration configuration = new RecxxConfiguration(configName, alias, propertiesConfiguration);
 		configuration.configureSubject();
 		execute(configuration);
+		return reconciliationDifferences;
 	}
 
 	public void execute(Map <String,String> configMap, String alias, String configName) throws Exception {
@@ -305,6 +309,7 @@ public class Recxx {
 	}
 	
 	private void writeDifference(List<Destination> destinations, Difference difference) {
+		reconciliationDifferences++;
 		for (Destination destination : destinations) {
 			destination.writeDifference(difference);
 		}
@@ -348,6 +353,7 @@ public class Recxx {
 	}
 	
     public static void main(String args[]) {
+    	int reconciliationDifferences = 0;
     	if (args.length < 1) {
     		LOGGER.error("Configuration is required for running Recxx");
     		LOGGER.info("Please supply one of the following configuration options: ");
@@ -367,7 +373,7 @@ public class Recxx {
 		    		String prefix = args[2];
 		    		String configName = args[3];
 		    		LOGGER.info("Running Recxx with " + configType + " config defined in '" + filePath + "' for the prefix '" + prefix + "'");
-					recxx.execute(filePath, prefix, configName);
+		    		reconciliationDifferences = recxx.execute(filePath, prefix, configName);
 				
 					break;
 					
@@ -375,14 +381,14 @@ public class Recxx {
 					
 		    		String configFilePath = args[1];
 					LOGGER.info("Running Recxx with " + configType + " config defined in '" + configFilePath + "'");
-					recxx.execute(configFilePath);
+					reconciliationDifferences = recxx.execute(configFilePath);
 					break;
 
 				default:
 
 		    		String defaultConfigFilePath = args[0];
 	    			LOGGER.info("Running Recxx with " + configType + " config defined in '" + defaultConfigFilePath + "'");
-					recxx.execute(defaultConfigFilePath);
+	    			reconciliationDifferences = recxx.execute(defaultConfigFilePath);
 					break;
 				}
     			
@@ -390,8 +396,10 @@ public class Recxx {
     			LOGGER.error("A problem has occurred, using the configuration options supplied: "
     				 + Arrays.toString(args) + "', please recheck your configuration");
     			e.printStackTrace();
+    			reconciliationDifferences = -1;
     		}
     	}
+    	System.exit(reconciliationDifferences);
     }
 
 }

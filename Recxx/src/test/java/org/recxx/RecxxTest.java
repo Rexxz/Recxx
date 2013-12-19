@@ -159,6 +159,20 @@ public class RecxxTest {
 		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
 		assertReconciles(fileConfig);
 	}
+
+	@Test
+	public void fileCachedFileSourcesDifferentByColumnOrder() throws Exception {
+		fileConfig.setProperty("source1.type", CachedFileSource.class.getName());
+		fileConfig.setProperty("source1.columns", Arrays.asList("Id|Integer", "Name|String", "Balance|Double", "Date|Date"));
+		fileConfig.setProperty("source1.filePath", RecxxTest.class.getResource("source1_10.csv").getPath());
+		fileConfig.setProperty("source2.type", CachedFileSource.class.getName());
+		fileConfig.setProperty("source2.columns", Arrays.asList("Name|String", "Balance|Double", "Date|Date", "Id|Integer"));
+		fileConfig.setProperty("source2.filePath", RecxxTest.class.getResource("source1_10_Muddled.csv").getPath());
+		fileConfig.setProperty("dateFormats", Default.ISO_DATE_FORMAT.toLocalizedPattern());
+		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
+		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
+		assertReconciles(fileConfig);
+	}
 	
 	@Test
 	public void fileCachedFileSourcesDifferentByIgnoredColumnWithNoKey() throws Exception {
