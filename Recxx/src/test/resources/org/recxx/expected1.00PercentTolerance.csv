@@ -1,13 +1,9 @@
 Key: Id,column,source1.value,source2.value,% Diff,ABS Diff
-100,Name,Name10,Missing,,
-100,Balance,1000.0,Missing,,
-100,Date,Mon Jan 01 00:00:00 GMT 2007,Missing,,
+100,*,*,Missing,,
 3,Balance,null,300.0,,
 3,Date,Mon Jan 01 00:00:00 GMT 2007,null,,
 1,Date,Tue Jan 02 00:00:00 GMT 2007,Mon Jan 01 00:00:00 GMT 2007,,
-10,Name,Missing,Name10,,
-10,Balance,Missing,1000.0,,
-10,Date,Missing,Mon Jan 01 00:00:00 GMT 2007,,
+10,*,Missing,*,,
 
 
 ======================

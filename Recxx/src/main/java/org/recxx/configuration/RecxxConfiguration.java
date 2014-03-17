@@ -153,8 +153,12 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	}
 	
 	public String configureFilePath(String alias) {
+		return configureFilePath(alias, true);
+	}
+
+	public String configureFilePath(String alias, boolean mandatory) {
 		String filePath = getString(alias + ".filePath");
-		if (filePath == null) {
+		if (filePath == null && mandatory) {
 			throw new IllegalArgumentException("'" + alias + ".filePath' not specified in configuration, " +
 					"this component must have a filePath, configured using '<alias>.filePath=<value>'");
 		}
@@ -184,6 +188,10 @@ public class RecxxConfiguration extends AbstractConfiguration {
 			.divide(new BigDecimal(100));
 	}
 	
+	public BigDecimal configureToleranceAbsolute() {
+		return getBigDecimal("toleranceLevelAbsolute", ComparisonUtils.DEFAULT_TOLERANCE_ABSOLUTE);
+	}
+
 	public BigDecimal configureSmallestAbsoluteValue(){
 		return getBigDecimal("smallestAbsoluteValue", ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE);
 	}
@@ -415,6 +423,5 @@ public class RecxxConfiguration extends AbstractConfiguration {
 			.build();	
 		return new DriverManagerWrappedDataSource(databaseMetaData);
 	}
-
 
 }

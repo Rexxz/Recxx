@@ -9,6 +9,7 @@ import org.recxx.domain.ComparisonResult;
 public class ComparisonUtils {
 	
 	public static final BigDecimal DEFAULT_TOLERANCE_PERCENTAGE = BigDecimal.ZERO;
+	public static final BigDecimal DEFAULT_TOLERANCE_ABSOLUTE = BigDecimal.ZERO;
 	public static final BigDecimal DEFAULT_SMALLEST_ABSOLUTE_VALUE = BigDecimal.valueOf(0.00001);
 
 	public static BigDecimal absoluteDifference(BigDecimal o1, BigDecimal o2) {
@@ -33,24 +34,34 @@ public class ComparisonUtils {
 	}
 	
 	public static ComparisonResult compare(Object o1, Object o2) {
-		return compare(o1, o2, DEFAULT_SMALLEST_ABSOLUTE_VALUE, DEFAULT_TOLERANCE_PERCENTAGE);
+		return compare(o1, o2, DEFAULT_SMALLEST_ABSOLUTE_VALUE, DEFAULT_TOLERANCE_PERCENTAGE, DEFAULT_TOLERANCE_ABSOLUTE);
 	}
-	
+
 	public static ComparisonResult compare(Object o1, Object o2, boolean equalsIgnoreCase) {
-		return compare(o1, o2, DEFAULT_SMALLEST_ABSOLUTE_VALUE, DEFAULT_TOLERANCE_PERCENTAGE, equalsIgnoreCase);
+		return compare(o1, o2, DEFAULT_SMALLEST_ABSOLUTE_VALUE, DEFAULT_TOLERANCE_PERCENTAGE, DEFAULT_TOLERANCE_ABSOLUTE, equalsIgnoreCase);
 	}
 	
 	public static ComparisonResult compare(Object o1, Object o2, BigDecimal smallestAbsoluteValue, BigDecimal tolerancePercentage) {
-		return compare(o1, o2, smallestAbsoluteValue, tolerancePercentage, false);
+		return compare(o1, o2, smallestAbsoluteValue, tolerancePercentage, DEFAULT_TOLERANCE_ABSOLUTE, false);
+	}	
+	
+	public static ComparisonResult compare(Object o1, Object o2, BigDecimal smallestAbsoluteValue, BigDecimal tolerancePercentage, BigDecimal toleranceAbsolute) {
+		return compare(o1, o2, smallestAbsoluteValue, tolerancePercentage, toleranceAbsolute, false);
 	}	
 		
-	public static ComparisonResult compare(Object o1, Object o2, BigDecimal smallestAbsoluteValue, BigDecimal tolerancePercentage, boolean equalsIgnoreCase) {
+	public static ComparisonResult compare(Object o1, 
+											Object o2, 
+											BigDecimal smallestAbsoluteValue, 
+											BigDecimal tolerancePercentage, 
+											BigDecimal toleranceAbsolute, 
+											boolean equalsIgnoreCase) {
 		ComparisonResult result = null;		
 		if (o1 instanceof Number && o2 instanceof Number) {
-			;
 			result = compareNumeric((BigDecimal)ConvertUtils.convert(o1, BigDecimal.class), 
 									(BigDecimal)ConvertUtils.convert(o2, BigDecimal.class), 
-									smallestAbsoluteValue, tolerancePercentage);
+									smallestAbsoluteValue, 
+									tolerancePercentage,
+									toleranceAbsolute);
 		}
 		else {
 			result = compareNonNumeric(o1, o2, equalsIgnoreCase);
@@ -73,7 +84,11 @@ public class ComparisonUtils {
 		}	
 	}
 	
-	private static ComparisonResult compareNumeric(BigDecimal o1, BigDecimal o2, BigDecimal smallestAbsoluteValue, BigDecimal tolerancePercentage) {
+	private static ComparisonResult compareNumeric(BigDecimal o1, 
+													BigDecimal o2, 
+													BigDecimal smallestAbsoluteValue, 
+													BigDecimal tolerancePercentage,
+													BigDecimal toleranceAbsolute) {
 		boolean difference = false;
 		if ((o1 == null || o2 == null)) {
 			if (!(o1 == null && o2 == null)) { 
@@ -81,15 +96,19 @@ public class ComparisonUtils {
 			}
 		}
 		else if ((o1.abs().compareTo(smallestAbsoluteValue)) == 1 || (o2.abs().compareTo(smallestAbsoluteValue) == 1)) {
+			difference = true;
 			BigDecimal percentageDifference = percentageDifference(o1, o2);
 			BigDecimal absoluteDifference = absoluteDifference(o1, o2);
-			if (percentageDifference.abs().compareTo(tolerancePercentage) == 1) {
-				difference = true;
+			if (percentageDifference.abs().compareTo(tolerancePercentage) != 1) {
+				difference = false;
+			}
+			if (toleranceAbsolute.compareTo(DEFAULT_TOLERANCE_ABSOLUTE) != 0 && 
+					absoluteDifference.abs().compareTo(toleranceAbsolute) != 1) {
+				difference = false;
 			}
 			return ComparisonResult.valueOf(difference, absoluteDifference, percentageDifference);
 		}
 		return ComparisonResult.valueOf(difference, null, null);
 	}
-
 	
 }

@@ -1,6 +1,8 @@
 package org.recxx.domain;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
@@ -119,8 +121,9 @@ public class FileMetaData {
 		this.columnsToIgnore = builder.columnsToIgnore;			
 		this.columnsToCompare = generateColumnsToCompare(builder.columnsToCompare, builder.columnsToIgnore, builder.keyColumns, builder.columns);			
 		this.columnNames = generateColumnNames(builder.columns);
+		reSortKeyColumns();
 	}
-		
+
 	public String getFilePath() {
 		return filePath;
 	}
@@ -247,6 +250,16 @@ public class FileMetaData {
 						.build();
 	}
 
+	private void reSortKeyColumns() {
+		if (this.keyColumns != null && !this.keyColumnIndexes.isEmpty()){
+			Collections.sort(keyColumns, new Comparator<String>() {
+				public int compare(String o1, String o2) {
+					return new Integer(columnNames.indexOf(o1)).compareTo(new Integer(columnNames.indexOf(o2)));
+				}
+			});
+		}
+	}
+		
 	@Override
 	public String toString() {
 		return ToStringBuilder.reflectionToString(this,

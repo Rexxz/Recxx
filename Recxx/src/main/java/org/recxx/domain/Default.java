@@ -11,11 +11,13 @@ public interface Default {
 	public static final String NULL = "null";
 	public static final String UNKNOWN_COLUMN_NAME = "?";
 
-	public static final String LINE_DELIMITER = "\n";
-	public static final String WINDOWS_LINE_DELIMITER = "\r\n";
+	public static final char LINE_FEED_CHAR = '\n';
+	public static final char CARRIAGE_RETURN_CHAR = '\r';
 
-	public static final char LINE_FEED = '\n';
-	public static final char CARRIAGE_RETURN = '\r';
+	public static final String LINE_DELIMITER = String.valueOf(LINE_FEED_CHAR);
+	public static final String WINDOWS_LINE_DELIMITER = "\r\n";
+	public static final String MAC_LINE_DELIMITER = "\r";
+	public static final String UNIX_LINE_DELIMITER = LINE_DELIMITER;
 	
 	public static final String PILCRO_DELIMITER = "\u00B6";
 	public static final String PIPE_DELIMITER = "|";
@@ -35,5 +37,6 @@ public interface Default {
 	public static final String DATABASE_PREFIX = "DatabasePrefix";
 	
 	public static final String EMPTY_KEY_COLUMN_NAME = "recxxGeneratedRowNumber";
+	public static final String NO_DELIMITER = "";
 	
 }

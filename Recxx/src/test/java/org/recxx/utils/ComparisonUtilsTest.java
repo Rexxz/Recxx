@@ -176,6 +176,26 @@ public class ComparisonUtilsTest {
 		assertEquals(false, ComparisonUtils.compare(BigDecimal.valueOf(0.00000124d), BigDecimal.valueOf(0.00000123d)).isDifferent());  // Below default smallest absolute minimum level
 		assertEquals(true, ComparisonUtils.compare(BigDecimal.valueOf(1.0124d), BigDecimal.valueOf(1.0123d),BigDecimal.valueOf(0),BigDecimal.valueOf(0)).isDifferent());
 		assertEquals(true, ComparisonUtils.compare(null, BigDecimal.valueOf(1.0123d),BigDecimal.valueOf(0),BigDecimal.valueOf(0)).isDifferent());
+		assertEquals(false, ComparisonUtils.compare(BigDecimal.valueOf(10d), 		// Diff 20% but Abs diff = diff tolerance
+													BigDecimal.valueOf(12d),
+													ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE, 
+													BigDecimal.valueOf(0.01), 
+													BigDecimal.valueOf(2d)).isDifferent());
+		assertEquals(false, ComparisonUtils.compare(BigDecimal.valueOf(100d), 		// Diff 2%, but Abs diff = diff tolerance
+													BigDecimal.valueOf(102d),
+													ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE, 
+													BigDecimal.valueOf(0.01), 
+													BigDecimal.valueOf(2d)).isDifferent());
+		assertEquals(true, ComparisonUtils.compare(BigDecimal.valueOf(100d), 		// Diff 2%, Abs diff > diff tolerance
+													BigDecimal.valueOf(102d),
+													ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE, 
+													BigDecimal.valueOf(0.01), 
+													BigDecimal.valueOf(1d)).isDifferent());
+		assertEquals(false, ComparisonUtils.compare(BigDecimal.valueOf(100d), 		// Diff 5%, Abs diff < diff tolerance
+													BigDecimal.valueOf(105d),
+													ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE, 
+													BigDecimal.valueOf(0.01), 
+													BigDecimal.valueOf(6d)).isDifferent());
 	}
 	
 	@Test

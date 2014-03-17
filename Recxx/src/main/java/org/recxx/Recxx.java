@@ -138,6 +138,7 @@ public class Recxx {
 		boolean ignoreCase = configuration.configureIgnoreCase();
 		BigDecimal smallestAbsoluteValue = configuration.configureSmallestAbsoluteValue();
 		BigDecimal toleranceLevel = configuration.configureToleranceLevel();
+		BigDecimal toleranceAbsolute = configuration.configureToleranceAbsolute();
 		List<String> compareColumns1 = source1.getCompareColumns();
 		List<String> compareColumns2 = source2.getCompareColumns();
 		List<String> ignoreColumns1 = source1.getIgnoreColumns();
@@ -152,64 +153,63 @@ public class Recxx {
 
 			if (keyExistsInBothSources) {
 				row2 = source2.getRow(key);					
-			}
-			
-			for (int i = 0; i < row1.size(); i++) {
-				String columnName = source1.getColumns().get(i).getName();
 				
-				if((compareColumns1.contains(Default.ALL_COLUMNS) || compareColumns1.contains(columnName)) 
-						&& (!ignoreColumns1.contains(columnName))
-						&& !source1.getKeyColumns().contains(columnName)
-						&& !source2.getKeyColumns().contains(columnName)) {
+				for (int i = 0; i < row1.size(); i++) {
+					String columnName = source1.getColumns().get(i).getName();
 					
-					Object field1 = row1.get(i);
-					int source2ColumnIndex = source2.getColumnIndex(columnName);
-					
-					if (keyExistsInBothSources && source2ColumnIndex >= 0 
-							&& ((compareColumns2.contains(Default.ALL_COLUMNS) || compareColumns2.contains(columnName)) 
-							&& !ignoreColumns2.contains(columnName) ) 
-							&& row2.size() >  source2ColumnIndex ) {
+					if((compareColumns1.contains(Default.ALL_COLUMNS) || compareColumns1.contains(columnName)) 
+							&& (!ignoreColumns1.contains(columnName))
+							&& !source1.getKeyColumns().contains(columnName)
+							&& !source2.getKeyColumns().contains(columnName)) {
 						
-						Object field2 = row2.get(source2ColumnIndex);
-							ComparisonResult comparison = ComparisonUtils.compare(field1, 
-									field2,
-									smallestAbsoluteValue,
-									toleranceLevel,
-									ignoreCase); 
-							if (comparison.isDifferent()) {
-								Difference difference = new Difference.Builder()
+						Object field1 = row1.get(i);
+						int source2ColumnIndex = source2.getColumnIndex(columnName);
+						
+						if (keyExistsInBothSources && source2ColumnIndex >= 0 
+								&& ((compareColumns2.contains(Default.ALL_COLUMNS) || compareColumns2.contains(columnName)) 
+								&& !ignoreColumns2.contains(columnName) ) 
+								&& row2.size() >  source2ColumnIndex ) {
+							
+							Object field2 = row2.get(source2ColumnIndex);
+								ComparisonResult comparison = ComparisonUtils.compare(field1, 
+										field2,
+										smallestAbsoluteValue,
+										toleranceLevel,
+										toleranceAbsolute,
+										ignoreCase); 
+								if (comparison.isDifferent()) {
+									Difference difference = new Difference.Builder()
+									.key(key)
+									.alias1(source1.getAlias())
+									.alias2(source2.getAlias())
+									.column(source1.getColumns().get(i))
+									.field1(field1)
+									.field2(field2)
+									.absoluteDifference(comparison.getAbsoluteDifference())
+									.percentageDifference(comparison.getPercentageDifference())
+									.build();
+									writeDifference(destinations, difference);
+									matchedRow = false;
+								}
+						}
+						else  {
+							Difference difference = new Difference.Builder()
 								.key(key)
 								.alias1(source1.getAlias())
 								.alias2(source2.getAlias())
 								.column(source1.getColumns().get(i))
 								.field1(field1)
-								.field2(field2)
-								.absoluteDifference(comparison.getAbsoluteDifference())
-								.percentageDifference(comparison.getPercentageDifference())
+								.field2("Missing")
+								.absoluteDifference(BigDecimal.ZERO)
+								.percentageDifference(BigDecimal.ZERO)
 								.build();
-								writeDifference(destinations, difference);
-								matchedRow = false;
-							}
-					}
-					else  {
-						Difference difference = new Difference.Builder()
-							.key(key)
-							.alias1(source1.getAlias())
-							.alias2(source2.getAlias())
-							.column(source1.getColumns().get(i))
-							.field1(field1)
-							.field2("Missing")
-							.absoluteDifference(BigDecimal.ZERO)
-							.percentageDifference(BigDecimal.ZERO)
-							.build();
-						writeDifference(destinations, difference);
-						matchedRow = false;
+							writeDifference(destinations, difference);
+							matchedRow = false;
+						}
 					}
 				}
-            }
 
-			if (keyExistsInBothSources) {
-				
+			
 				for (int i = 0; i < row2.size(); i++) {
 
 					boolean sourceColumn1Exists = false;
@@ -241,40 +241,42 @@ public class Recxx {
 						matchedRow = false;
 					}
 				}
-				
+
+				if (matchedRow) {
+					matchCount++;
+				}
 			}
 			
-			if (matchedRow) {
-				matchCount++;
+			else {
+				Difference difference = new Difference.Builder()
+					.key(key)
+					.alias1(source1.getAlias())
+					.alias2(source2.getAlias())
+					.column(new Column("*", String.class))
+					.field1("*")
+					.field2("Missing")
+					.absoluteDifference(BigDecimal.ZERO)
+					.percentageDifference(BigDecimal.ZERO)
+					.build();
+				writeDifference(destinations, difference);
 			}
+			
         }
         
         for (Key key : keySet2) {
 			
         	if (!keySet1.contains(key)) {
-				List<?> row2 = source2.getRow(key);					
-				
-				for (int i = 0; i < row2.size(); i++) {
-					String columnName = source2.getColumns().get(i).getName();
-					
-					if (!source2.getKeyColumns().contains(columnName)
-							&& (compareColumns2.contains(columnName)  ||
-								compareColumns2.contains(Default.ALL_COLUMNS))) {
-						
-						Object field2 = row2.get(i);
-						Difference difference = new Difference.Builder()
-							.key(key)
-							.alias1(source1.getAlias())
-							.alias2(source2.getAlias())
-							.column(source2.getColumns().get(i))
-							.field1("Missing")
-							.field2(field2)
-							.absoluteDifference(BigDecimal.ZERO)
-							.percentageDifference(BigDecimal.ZERO)
-							.build();
-						writeDifference(destinations, difference);
-					}
-				}
+				Difference difference = new Difference.Builder()
+					.key(key)
+					.alias1(source1.getAlias())
+					.alias2(source2.getAlias())
+					.column(new Column("*", String.class))
+					.field1("Missing")
+					.field2("*")
+					.absoluteDifference(BigDecimal.ZERO)
+					.percentageDifference(BigDecimal.ZERO)
+					.build();
+				writeDifference(destinations, difference);
 			}
 		}
         

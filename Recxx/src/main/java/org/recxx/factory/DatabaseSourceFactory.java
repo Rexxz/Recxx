@@ -18,6 +18,7 @@ public class DatabaseSourceFactory implements SourceFactory {
 										.databaseUserId(configuration.configureDatabaseUserId(alias))
 										.databasePassword(configuration.configureDatabasePassword(alias))
 										.sql(configuration.configureSql(alias))
+										.filePath(configuration.configureFilePath(alias, false))
 										.keyColumns(configuration.configureKeyColumns(alias))
 										.columnsToCompare(configuration.configureColumnsToCompare(alias))
 										.columnsToIgnore(configuration.configureColumnsToIgnore(alias))

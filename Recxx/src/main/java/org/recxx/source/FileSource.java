@@ -123,7 +123,6 @@ public abstract class FileSource implements Source<Key> {
 				charset = Charset.forName(fileMetaData.getEncoding());
 			return (new String(new byte[] {b}, charset)).charAt(0); 
 		}
-		
 	}
 
 	public List<Column> getColumns() {
@@ -147,6 +146,7 @@ public abstract class FileSource implements Source<Key> {
 	}
 	
 	public void close() {
+		LOGGER.info("Closing file: " + fileMetaData.getFilePath());
 		try {
 			randomAccessFile.close(); 	randomAccessFile = null;
 			channel.close(); 			channel = null;
@@ -166,32 +166,45 @@ public abstract class FileSource implements Source<Key> {
 
 	protected String getRowDelimiter() {
 		int lineFeeds = 0;
-		int lineFeedCarriageReturn = 0;
-		String delimiter = Default.LINE_DELIMITER;
+		int carriageReturnLineFeed = 0;
+		int carriageReturns = 0;
+		String delimiter = Default.UNIX_LINE_DELIMITER;
 		StringBuilder sb = new StringBuilder();
 	
 		byteBuffer.rewind();
+		char pp = 'p';
 		char p = ' ';
 		while (byteBuffer.hasRemaining()) {
 			char c = decodeSingleByteToChar(byteBuffer.get());
-			if (p == Default.CARRIAGE_RETURN && c == Default.LINE_FEED) {
-				lineFeedCarriageReturn++;;
+			if (p == Default.CARRIAGE_RETURN_CHAR && c == Default.LINE_FEED_CHAR) {
+				carriageReturnLineFeed++;;
 			}
-			else if (p != Default.CARRIAGE_RETURN && c == Default.LINE_FEED) {
+			else if (p != Default.CARRIAGE_RETURN_CHAR && c == Default.LINE_FEED_CHAR) {
 				lineFeeds++;
 			}
+			else if (pp != Default.LINE_FEED_CHAR && p == Default.CARRIAGE_RETURN_CHAR && c != Default.LINE_FEED_CHAR) {
+				carriageReturns++;
+			}
+			pp = p;
 			p = c;
 		}
 		byteBuffer.rewind();
 
 		sb.append("Source '").append(getAlias()).append("': Auto detected line delimiter as ");
-		if (lineFeeds > lineFeedCarriageReturn) {
+		if (lineFeeds > carriageReturnLineFeed && lineFeeds > carriageReturns) {
 			sb.append("LF (Unix)");
-			delimiter = String.valueOf(Default.LINE_FEED);
+			delimiter = String.valueOf(Default.LINE_FEED_CHAR);
 		}
-		else if (lineFeedCarriageReturn > lineFeeds) {
+		else if (carriageReturnLineFeed > lineFeeds && carriageReturnLineFeed > carriageReturns) {
 			sb.append("CR + LF (Windows)");
 			delimiter = Default.WINDOWS_LINE_DELIMITER;
+		}
+		else if (carriageReturns > lineFeeds && carriageReturns > carriageReturnLineFeed) {
+			sb.append("CR (Mac)");
+			delimiter = Default.MAC_LINE_DELIMITER;
+		}
+		else {
+			delimiter = Default.NO_DELIMITER;
 		}
 		LOGGER.info(sb.toString());
 		return delimiter;

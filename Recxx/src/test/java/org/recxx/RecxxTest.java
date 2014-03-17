@@ -4,6 +4,7 @@ import static org.recxx.utils.ReconciliationAssert.assertReconciles;
 import static org.recxx.utils.ReconciliationAssert.failsToReconcile;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 
@@ -69,14 +70,15 @@ public class RecxxTest {
 
 	@Test
 	public void fileSourcesSource1HasExtraColumn() throws Exception {
-		fileConfig.setProperty("source1.filePath", RecxxTest.class.getResource("source2ExtraColumn_10.csv").getPath());
+		fileConfig.setProperty("source1.filePath", RecxxTest.class.getResource("source1ExtraColumn_10.csv").getPath());
 		fileConfig.setProperty("source1.columns", Arrays.asList("Id|Integer", "Name|String", "Balance|Double", "Date|Date", "Address|String"));
+//		fileConfig.setProperty("source1.columnsToIgnore", Arrays.asList("Address"));
 		failsToReconcile(fileConfig);
 	}
 	
 	@Test
 	public void fileSourcesSource2HasExtraColumn() throws Exception {
-		fileConfig.setProperty("source2.filePath", RecxxTest.class.getResource("source1ExtraColumn_10.csv").getPath());
+		fileConfig.setProperty("source2.filePath", RecxxTest.class.getResource("source2ExtraColumn_10.csv").getPath());
 		fileConfig.setProperty("source2.columns", Arrays.asList("Id|Integer", "Name|String", "Balance|Double", "Date|Date", "Address|String"));
 		failsToReconcile(fileConfig);
 	}
@@ -187,6 +189,79 @@ public class RecxxTest {
 		fileConfig.setProperty("source2.filePath", RecxxTest.class.getResource("source2_10_DateDiffOnly.csv").getPath());
 		fileConfig.setProperty("source2.columnsToIgnore", Arrays.asList("Date"));
 		fileConfig.setProperty("dateFormats", Default.ISO_DATE_FORMAT.toLocalizedPattern());
+		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
+		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
+		assertReconciles(fileConfig);
+	}
+	
+	@Test
+	public void fileCachedFileSourcesSingleRowsNoHeadersNoKeys() throws Exception {
+		fileConfig.setProperty("source1.keyColumns", null);
+		fileConfig.setProperty("source2.keyColumns", null);
+		fileConfig.setProperty("source1.type", CachedFileSource.class.getName());
+		fileConfig.setProperty("source1.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source1.filePath", RecxxTest.class.getResource("source1_1_NoHeader.csv").getPath());
+		fileConfig.setProperty("source1.ignoreHeaderRow", Boolean.FALSE);
+		fileConfig.setProperty("source2.type", CachedFileSource.class.getName());
+		fileConfig.setProperty("source2.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source2.filePath", RecxxTest.class.getResource("source1_1_NoHeader.csv").getPath());
+		fileConfig.setProperty("source2.ignoreHeaderRow", Boolean.FALSE);
+		fileConfig.setProperty("dateFormats", Default.ISO_DATE_FORMAT.toLocalizedPattern());
+		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
+		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
+		assertReconciles(fileConfig);
+	}
+
+	@Test
+	public void fileCachedFileSourcesNoHeadersNoKeys() throws Exception {
+		fileConfig.setProperty("source1.keyColumns", null);
+		fileConfig.setProperty("source2.keyColumns", null);
+		fileConfig.setProperty("source1.type", CachedFileSource.class.getName());
+		fileConfig.setProperty("source1.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source1.filePath", RecxxTest.class.getResource("source1_2_NoHeader.csv").getPath());
+		fileConfig.setProperty("source1.ignoreHeaderRow", Boolean.FALSE);
+		fileConfig.setProperty("source2.type", CachedFileSource.class.getName());
+		fileConfig.setProperty("source2.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source2.filePath", RecxxTest.class.getResource("source1_2_NoHeader.csv").getPath());
+		fileConfig.setProperty("source2.ignoreHeaderRow", Boolean.FALSE);
+		fileConfig.setProperty("dateFormats", Default.ISO_DATE_FORMAT.toLocalizedPattern());
+		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
+		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
+		assertReconciles(fileConfig);
+	}
+
+	@Test
+	public void fileCachedFileSourcesNoHeadersNoKeysWithDifferences() throws Exception {
+		fileConfig.setProperty("source1.keyColumns", null);
+		fileConfig.setProperty("source2.keyColumns", null);
+		fileConfig.setProperty("source1.type", CachedFileSource.class.getName());
+		fileConfig.setProperty("source1.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source1.filePath", RecxxTest.class.getResource("source1_2_NoHeader.csv").getPath());
+		fileConfig.setProperty("source1.ignoreHeaderRow", Boolean.FALSE);
+		fileConfig.setProperty("source2.type", CachedFileSource.class.getName());
+		fileConfig.setProperty("source2.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source2.filePath", RecxxTest.class.getResource("source2_2_NoHeader.csv").getPath());
+		fileConfig.setProperty("source2.ignoreHeaderRow", Boolean.FALSE);
+		fileConfig.setProperty("dateFormats", Default.ISO_DATE_FORMAT.toLocalizedPattern());
+		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
+		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
+		failsToReconcile(fileConfig);
+	}
+
+	@Test
+	public void fileCachedFileSourcesNoHeadersNoKeysWithDifferencesButTolerated() throws Exception {
+		fileConfig.setProperty("source1.keyColumns", null);
+		fileConfig.setProperty("source2.keyColumns", null);
+		fileConfig.setProperty("source1.type", CachedFileSource.class.getName());
+		fileConfig.setProperty("source1.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source1.filePath", RecxxTest.class.getResource("source1_2_NoHeader.csv").getPath());
+		fileConfig.setProperty("source1.ignoreHeaderRow", Boolean.FALSE);
+		fileConfig.setProperty("source2.type", CachedFileSource.class.getName());
+		fileConfig.setProperty("source2.columns", Arrays.asList("Integer", "String", "Double", "Date"));
+		fileConfig.setProperty("source2.filePath", RecxxTest.class.getResource("source2_2_NoHeader.csv").getPath());
+		fileConfig.setProperty("source2.ignoreHeaderRow", Boolean.FALSE);
+		fileConfig.setProperty("dateFormats", Default.ISO_DATE_FORMAT.toLocalizedPattern());
+		fileConfig.setProperty("toleranceLevelAbsolute", BigDecimal.valueOf(1));
 		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
 		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
 		assertReconciles(fileConfig);

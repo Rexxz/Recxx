@@ -38,8 +38,6 @@ public class DatabaseSource implements Source<Key> {
     private Connection connection;
     private Statement statement;
 
-	private String generatedFileName;
-
 	public DatabaseSource(String alias, DatabaseMetaData databaseMetaData) {
 		this.alias = alias;
 		this.databaseMetaData = databaseMetaData;
@@ -93,14 +91,19 @@ public class DatabaseSource implements Source<Key> {
 	private ResultSet getResultset() throws Exception {
 		ResultSet rs = null;
 		String sql = databaseMetaData.getSql();
+		LOGGER.info("Attempting to use the following sql config:" + databaseMetaData.getSql());
 		File file = new File(sql);
 		if (file.exists()) {
 			LOGGER.info("Source '" + getAlias() + "': File based SQL discovered, will attempt to load sql file: " + databaseMetaData.getSql());
-			sql = FileUtils.readFileToString(file);
-			sql = SystemUtils.replaceSystemProperties(sql);
+			sql = SystemUtils.replaceSystemProperties(FileUtils.readFileToString(file));
 		}
 		LOGGER.info("Source '" + getAlias() + "': Running sql :" + sql);
-		rs = statement.executeQuery(sql);
+		try {
+			rs = statement.executeQuery(sql);
+		} catch (Exception e) {
+			throw new InterruptedException("Source '" + getAlias() + "' failed attempting to run the SQL statement, if this is a file, it doesnt exist: " + sql);
+		}
+		LOGGER.info("Source '" + getAlias() + "': Sql completed");
 		return rs;
 	}
 	
@@ -110,16 +113,23 @@ public class DatabaseSource implements Source<Key> {
 			Column column = new Column(resultSetMetaData.getColumnName(i+1), convert(resultSetMetaData.getColumnType(i+1)));
 			columns.add(column);
 		}
-		File tmpdir = new File(FileUtils.getTempDirectoryPath());
-		generatedFileName = alias + Default.FILE_DATE_FORMAT.format(new Date()) + ".psv";
+		boolean temporaryFile = true;
+		String filePath;
+		if (databaseMetaData.getFilePath() != null) {
+			filePath = databaseMetaData.getFilePath();
+			temporaryFile = false;
+		}
+		else {
+			filePath = FileUtils.getTempDirectoryPath() + alias + Default.FILE_DATE_FORMAT.format(new Date()) + ".psv";
+		}
 		return new FileMetaData.Builder()
-							.filePath(new File(tmpdir, generatedFileName).getPath())
+							.filePath(filePath)
 							.keyColumns(databaseMetaData.getKeyColumns())
 							.columns(columns)
 							.delimiter(Default.PIPE_DELIMITER)
 							.lineDelimiter(Default.WINDOWS_LINE_DELIMITER)
 							.ignoreHeaderRow(true)
-							.temporaryFile(true)
+							.temporaryFile(temporaryFile)
 							.columnsToIgnore(databaseMetaData.getColumnsToIgnore())
 							.columnsToCompare(databaseMetaData.getColumnsToCompare())
 							.dateFormats(databaseMetaData.getDateFormats())

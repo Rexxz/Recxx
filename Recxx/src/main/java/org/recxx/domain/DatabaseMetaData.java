@@ -15,6 +15,7 @@ public class DatabaseMetaData {
 	private final String databaseUserId;
 	private final String databasePassword;
 	private final String sql;
+	private final String filePath;
 
 	private final List<String> keyColumns;
 	private final List<String> columnsToCompare;
@@ -29,6 +30,7 @@ public class DatabaseMetaData {
 		 String databaseUserId;
 		 String databasePassword;
 		 String sql;
+		 String filePath;
 
 		 List<String> keyColumns;
 		 List<String> columnsToCompare;
@@ -58,6 +60,11 @@ public class DatabaseMetaData {
 		 
 		 public Builder sql(String sql) {
 			 this.sql = sql;
+			 return this;
+		 }
+		 
+		 public Builder filePath(String filePath) {
+			 this.filePath = filePath;
 			 return this;
 		 }
 		 
@@ -93,6 +100,7 @@ public class DatabaseMetaData {
 		this.databaseUserId = builder.databaseUserId;
 		this.databasePassword = builder.databasePassword;
 		this.sql = builder.sql;
+		this.filePath = builder.filePath;
 
 		this.keyColumns = builder.keyColumns;
 		this.columnsToCompare = builder.columnsToCompare == null ? Arrays.asList(Default.ALL_COLUMNS) : builder.columnsToCompare;
@@ -121,6 +129,10 @@ public class DatabaseMetaData {
 		return sql;
 	}
 
+	public String getFilePath() {
+		return filePath;
+	}
+	
 	public List<String> getKeyColumns() {
 		return keyColumns;
 	}
