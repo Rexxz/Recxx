@@ -19,6 +19,8 @@ public class DatabaseSourceFactory implements SourceFactory {
 										.databasePassword(configuration.configureDatabasePassword(alias))
 										.sql(configuration.configureSql(alias))
 										.filePath(configuration.configureFilePath(alias, false))
+										.delimiter(configuration.configureDelimiter(alias))
+										.lineDelimiter(configuration.configureLineDelimiter(alias))
 										.keyColumns(configuration.configureKeyColumns(alias))
 										.columnsToCompare(configuration.configureColumnsToCompare(alias))
 										.columnsToIgnore(configuration.configureColumnsToIgnore(alias))

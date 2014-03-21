@@ -16,6 +16,8 @@ public class DatabaseMetaData {
 	private final String databasePassword;
 	private final String sql;
 	private final String filePath;
+	private final String delimiter;
+	private final String lineDelimiter;
 
 	private final List<String> keyColumns;
 	private final List<String> columnsToCompare;
@@ -31,6 +33,8 @@ public class DatabaseMetaData {
 		 String databasePassword;
 		 String sql;
 		 String filePath;
+		 String delimiter;
+		 String lineDelimiter;
 
 		 List<String> keyColumns;
 		 List<String> columnsToCompare;
@@ -68,6 +72,16 @@ public class DatabaseMetaData {
 			 return this;
 		 }
 		 
+		 public Builder delimiter(String delimiter) {
+			 this.delimiter = delimiter;
+			 return this;
+		 }
+		 
+		 public Builder lineDelimiter(String lineDelimiter) {
+			 this.lineDelimiter = lineDelimiter;
+			 return this;
+		 }
+
 		 public Builder keyColumns(List<String> keyColumns) {
 			 this.keyColumns = keyColumns;
 			 return this;
@@ -101,6 +115,8 @@ public class DatabaseMetaData {
 		this.databasePassword = builder.databasePassword;
 		this.sql = builder.sql;
 		this.filePath = builder.filePath;
+		this.delimiter = builder.delimiter;
+		this.lineDelimiter = builder.lineDelimiter;
 
 		this.keyColumns = builder.keyColumns;
 		this.columnsToCompare = builder.columnsToCompare == null ? Arrays.asList(Default.ALL_COLUMNS) : builder.columnsToCompare;
@@ -133,6 +149,14 @@ public class DatabaseMetaData {
 		return filePath;
 	}
 	
+	public String getDelimiter() {
+		return delimiter;
+	}
+
+	public String getLineDelimiter() {
+		return lineDelimiter;
+	}
+
 	public List<String> getKeyColumns() {
 		return keyColumns;
 	}

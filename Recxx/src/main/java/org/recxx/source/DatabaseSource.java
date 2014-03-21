@@ -52,8 +52,7 @@ public class DatabaseSource implements Source<Key> {
 		resultset = null;
 		closeDB();
 		fileSource = new RandomAccessFileSource(alias, fileMetaData);
-		fileSource.call();
-		return this;
+		return fileSource.call();
 	}
 
 	private void writeFile(ResultSet resultset) throws IOException, SQLException {
@@ -115,19 +114,25 @@ public class DatabaseSource implements Source<Key> {
 		}
 		boolean temporaryFile = true;
 		String filePath;
+		String delimiter;
+		String lineDelimiter;
 		if (databaseMetaData.getFilePath() != null) {
 			filePath = databaseMetaData.getFilePath();
+			delimiter = databaseMetaData.getDelimiter();
+			lineDelimiter = databaseMetaData.getLineDelimiter();
 			temporaryFile = false;
 		}
 		else {
 			filePath = FileUtils.getTempDirectoryPath() + alias + Default.FILE_DATE_FORMAT.format(new Date()) + ".psv";
+			delimiter = Default.PIPE_DELIMITER;
+			lineDelimiter = Default.WINDOWS_LINE_DELIMITER;
 		}
 		return new FileMetaData.Builder()
 							.filePath(filePath)
 							.keyColumns(databaseMetaData.getKeyColumns())
 							.columns(columns)
-							.delimiter(Default.PIPE_DELIMITER)
-							.lineDelimiter(Default.WINDOWS_LINE_DELIMITER)
+							.delimiter(delimiter)
+							.lineDelimiter(lineDelimiter)
 							.ignoreHeaderRow(true)
 							.temporaryFile(temporaryFile)
 							.columnsToIgnore(databaseMetaData.getColumnsToIgnore())
