@@ -5,7 +5,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -16,6 +15,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
+
+import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.recxx.domain.Column;
@@ -42,7 +47,7 @@ public class DatabaseSource implements Source<Key> {
 		this.alias = alias;
 		this.databaseMetaData = databaseMetaData;
     }
-    
+
 	public Source<Key> call() throws Exception {
 		openDB();
 		ResultSet resultset = getResultset();
@@ -63,7 +68,7 @@ public class DatabaseSource implements Source<Key> {
 		writer.flush();
 		writer.close();
 	}
-	
+
     private void closeDB() throws SQLException {
         if (statement != null) {
         	statement.close();
@@ -74,15 +79,19 @@ public class DatabaseSource implements Source<Key> {
         	connection = null;
         }
     }
-    
-    private void openDB() throws ClassNotFoundException, SQLException {
+
+    private void openDB() throws ClassNotFoundException, SQLException, InstantiationException, NamingException {
     	StringBuilder sb = new StringBuilder();
     	LOGGER.info(sb.append("Source '").append(getAlias())
     			.append("': Connecting to Server '").append(databaseMetaData.getDatabaseUrl())
     			.append("', User '").append(databaseMetaData.getDatabaseUserId()).toString());
         LOGGER.info("Connecting to DB using " + sb.toString());
-    	Class.forName(databaseMetaData.getDatabaseDriver());
-        connection = DriverManager.getConnection(databaseMetaData.getDatabaseUrl(), databaseMetaData.getDatabaseUserId(), databaseMetaData.getDatabasePassword());
+		BasicDataSource dataSource = new BasicDataSource();
+		dataSource.setDriverClassName(databaseMetaData.getDatabaseDriver());
+		dataSource.setUrl(databaseMetaData.getDatabaseUrl());
+		dataSource.setUsername(databaseMetaData.getDatabaseUserId());
+		dataSource.setPassword(databaseMetaData.getDatabasePassword());
+		connection = dataSource.getConnection();
         statement = connection.createStatement();
         LOGGER.info("Successfully initialised the Database connection");
     }
@@ -98,14 +107,19 @@ public class DatabaseSource implements Source<Key> {
 		}
 		LOGGER.info("Source '" + getAlias() + "': Running sql :" + sql);
 		try {
-			rs = statement.executeQuery(sql);
+			statement.execute(sql);
+			while (statement.getUpdateCount() != -1) {
+				statement.getMoreResults();
+				rs = statement.getResultSet();
+			}
 		} catch (Exception e) {
-			throw new InterruptedException("Source '" + getAlias() + "' failed attempting to run the SQL statement, if this is a file, it doesnt exist: " + sql);
+			e.printStackTrace();
+			throw new InterruptedException("Source '" + getAlias() + "' failed attempting to run the SQL statement");
 		}
 		LOGGER.info("Source '" + getAlias() + "': Sql completed");
 		return rs;
 	}
-	
+
 	private FileMetaData configureFileMetaData(ResultSetMetaData resultSetMetaData, DatabaseMetaData databaseMetaData) throws SQLException {
 		List<Column> columns = new ArrayList<Column>();
 		for (int i = 0; i < resultSetMetaData.getColumnCount(); i++) {
@@ -123,7 +137,7 @@ public class DatabaseSource implements Source<Key> {
 			temporaryFile = false;
 		}
 		else {
-			filePath = FileUtils.getTempDirectoryPath() + alias + Default.FILE_DATE_FORMAT.format(new Date()) + ".psv";
+			filePath = FileUtils.getTempDirectoryPath() + System.getProperty("file.separator") + alias + Default.FILE_DATE_FORMAT.format(new Date()) + ".psv";
 			delimiter = Default.PIPE_DELIMITER;
 			lineDelimiter = Default.WINDOWS_LINE_DELIMITER;
 		}
@@ -138,10 +152,10 @@ public class DatabaseSource implements Source<Key> {
 							.columnsToIgnore(databaseMetaData.getColumnsToIgnore())
 							.columnsToCompare(databaseMetaData.getColumnsToCompare())
 							.dateFormats(databaseMetaData.getDateFormats())
-							.build();		
+							.build();
 	}
-	
-	
+
+
 	@SuppressWarnings("rawtypes")
 	public Class convert( int type ) {
 		Class result = java.lang.Object.class;
@@ -152,54 +166,54 @@ public class DatabaseSource implements Source<Key> {
 			case Types.LONGVARCHAR:
 				result = java.lang.String.class;
 				break;
-	
+
 			case Types.NUMERIC:
 			case Types.DECIMAL:
 				result = java.math.BigDecimal.class;
 				break;
-	
+
 			case Types.BIT:
 				result = java.lang.Boolean.class;
 				break;
-	
+
 			case Types.TINYINT:
 				result = java.lang.Byte.class;
 				break;
-	
+
 			case Types.SMALLINT:
 				result = java.lang.Short.class;
 				break;
-	
+
 			case Types.INTEGER:
 				result = java.lang.Integer.class;
 				break;
-	
+
 			case Types.BIGINT:
 				result = java.lang.Long.class;
 				break;
-	
+
 			case Types.FLOAT:
 			case Types.DOUBLE:
 				result = java.lang.Double.class;
 				break;
-	
+
 			case Types.BINARY:
 			case Types.VARBINARY:
 			case Types.LONGVARBINARY:
 				result = java.lang.Byte[].class;
 				break;
-	
+
 			case Types.DATE:
 			case Types.TIMESTAMP:
 			case Types.TIME:
 				result = java.util.Date.class;
 				break;
-	
+
 		}
 
 		return result;
 	}
-	
+
 	public Set<Key> getKeySet() {
 		return fileSource.getKeySet();
 	}
