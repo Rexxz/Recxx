@@ -15,10 +15,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
-import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.io.FileUtils;
@@ -112,6 +109,7 @@ public class DatabaseSource implements Source<Key> {
 				statement.getMoreResults();
 				rs = statement.getResultSet();
 			}
+			if (rs == null) rs = statement.getResultSet();
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new InterruptedException("Source '" + getAlias() + "' failed attempting to run the SQL statement");
