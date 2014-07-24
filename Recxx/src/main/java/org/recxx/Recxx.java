@@ -36,10 +36,17 @@ public class Recxx {
 	private static final String PROPERTIES_FILE_ENDING = ".properties";
 
 	private String configName;
+	private RecxxConfiguration configuration;
 
 	private int reconciliationDifferences = 0;
 
 	public enum ConfigType { FILE, DATABASE } ;
+
+	public Recxx ()  {}
+
+	public Recxx (RecxxConfiguration configuration)  {
+		this.configuration = configuration;
+	}
 
 	public int execute(String filePath) throws Exception {
 		File file = new File(filePath);
@@ -87,6 +94,10 @@ public class Recxx {
 		execute(configuration);
 	}
 
+	public List<Destination> execute() throws Exception {
+		return execute(this.getConfiguration());
+	}
+
 	public List<Destination> execute(RecxxConfiguration configuration) throws Exception {
 
 		List<Source<Key>> sources = new AbstractSourceFactory().getSources(configuration);
@@ -107,7 +118,7 @@ public class Recxx {
 
         while (!task1.isDone() && !task2.isDone()) {
         	try {
-                Thread.sleep(2000);
+                Thread.sleep(500);
             }
         	catch (InterruptedException ie) {
 				ie.printStackTrace();
@@ -119,6 +130,14 @@ public class Recxx {
 
 		return compare(task1.get(), task2.get(), destinations, configuration);
     }
+
+	public RecxxConfiguration getConfiguration() {
+		return configuration;
+	}
+
+	public void setConfiguration(RecxxConfiguration configuration) {
+		this.configuration = configuration;
+	}
 
 	private List<Destination> compare(Source<Key> source1,
 							Source<Key> source2,

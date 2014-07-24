@@ -4,6 +4,8 @@ import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.util.logging.Logger;
 
 import javax.sql.DataSource;
 
@@ -12,7 +14,7 @@ import org.recxx.domain.DatabaseMetaData;
 public class DriverManagerWrappedDataSource implements DataSource {
 
 	private final DatabaseMetaData databaseMetaData;
-	
+
 	public DriverManagerWrappedDataSource(DatabaseMetaData databaseMetaData) {
 		this.databaseMetaData = databaseMetaData;
     	try {
@@ -21,7 +23,7 @@ public class DriverManagerWrappedDataSource implements DataSource {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public PrintWriter getLogWriter() throws SQLException {
 		return DriverManager.getLogWriter();
 	}
@@ -52,6 +54,10 @@ public class DriverManagerWrappedDataSource implements DataSource {
 
 	public Connection getConnection(String user, String password) throws SQLException {
 		return DriverManager.getConnection(databaseMetaData.getDatabaseUrl(), user, password);
+	}
+
+	public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+		throw new SQLFeatureNotSupportedException();
 	}
 
 }

@@ -18,64 +18,46 @@ import org.recxx.destination.CsvDestination;
 import org.recxx.domain.Default;
 import org.recxx.source.CachedFileSource;
 import org.recxx.source.RandomAccessFileSource;
-import org.recxx.utils.FileAssert;
 
 public class RecxxTest {
 
 	private static final String TEMP_OUTPUT_FILE_CSV = "tempOutputFile.csv";
-	
+
 	private static RecxxConfiguration fileConfig;
 
 	@Test
 	public void filesDifferAndFailsToReconcile() throws Exception {
-		String expectedOutputFile = RecxxTest.class.getResource("expected0.01PercentTolerance.csv").getPath();
-		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
-		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
 		fileConfig.setProperty("toleranceLevelPercent", "0.01");
 		failsToReconcile(fileConfig);
-		FileAssert.assertEquals(expectedOutputFile, actualOutputFile);
 	}
 
 	@Test
 	public void filesDifferAndFailsReconcileZeroPercentTolerance() throws Exception {
-		String expectedOutputFile = RecxxTest.class.getResource("expected0.00PercentTolerance.csv").getPath();
-		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
 		fileConfig.setProperty("toleranceLevelPercent", "0.00");
-		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
 		failsToReconcile(fileConfig);
-		FileAssert.assertEquals(expectedOutputFile, actualOutputFile);
 	}
 
 	@Test
 	public void filesDifferAndFailsReconcileOnePercentTolerance() throws Exception {
-		String expectedOutputFile = RecxxTest.class.getResource("expected1.00PercentTolerance.csv").getPath();
-		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
 		fileConfig.setProperty("toleranceLevelPercent", "1.00");
-		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
 		failsToReconcile(fileConfig);
-		FileAssert.assertEquals(expectedOutputFile, actualOutputFile);
 	}
-	
+
 	@Test
 	public void filesDifferAndFailsReconcileZeroPercentToleranceCaseDifference() throws Exception {
-		String expectedOutputFile = RecxxTest.class.getResource("expected0.00PercentToleranceCaseDiff.csv").getPath();
-		String actualOutputFile = FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV;
 		fileConfig.setProperty("source1.filePath", RecxxTest.class.getResource("source1_10_upper.csv").getPath());
 		fileConfig.setProperty("ignoreCase", "true");
 		fileConfig.setProperty("toleranceLevelPercent", "0.00");
-		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
 		failsToReconcile(fileConfig);
-		FileAssert.assertEquals(expectedOutputFile, actualOutputFile);
 	}
 
 	@Test
 	public void fileSourcesSource1HasExtraColumn() throws Exception {
 		fileConfig.setProperty("source1.filePath", RecxxTest.class.getResource("source1ExtraColumn_10.csv").getPath());
 		fileConfig.setProperty("source1.columns", Arrays.asList("Id|Integer", "Name|String", "Balance|Double", "Date|Date", "Address|String"));
-//		fileConfig.setProperty("source1.columnsToIgnore", Arrays.asList("Address"));
 		failsToReconcile(fileConfig);
 	}
-	
+
 	@Test
 	public void fileSourcesSource2HasExtraColumn() throws Exception {
 		fileConfig.setProperty("source2.filePath", RecxxTest.class.getResource("source2ExtraColumn_10.csv").getPath());
@@ -175,7 +157,7 @@ public class RecxxTest {
 		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
 		assertReconciles(fileConfig);
 	}
-	
+
 	@Test
 	public void fileCachedFileSourcesDifferentByIgnoredColumnWithNoKey() throws Exception {
 		fileConfig.setProperty("source1.keyColumns", null);
@@ -193,7 +175,7 @@ public class RecxxTest {
 		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
 		assertReconciles(fileConfig);
 	}
-	
+
 	@Test
 	public void fileCachedFileSourcesSingleRowsNoHeadersNoKeys() throws Exception {
 		fileConfig.setProperty("source1.keyColumns", null);
@@ -266,21 +248,21 @@ public class RecxxTest {
 		fileConfig.setProperty("csvFile.filePath", actualOutputFile);
 		assertReconciles(fileConfig);
 	}
-	
+
 	@Test(expected=ExecutionException.class)
 	public void filesDifferNoDateFormatSpecified() throws Exception {
 		fileConfig.setProperty("dateFormats", null);
 		assertReconciles(fileConfig);
 	}
-	
+
 	@Before
 	public void setUp() throws Exception {
-		
+
 		fileConfig = new RecxxConfiguration();
 		fileConfig.setProperty("dateFormats", "EEE MMM dd HH:mm:ss z yyyy");
 
 		fileConfig.setProperty("sources", Arrays.asList("source1", "source2"));
-		
+
 		fileConfig.setProperty("source1.type", CachedFileSource.class.getName());
 		fileConfig.setProperty("source1.filePath", RecxxTest.class.getResource("source1_10.csv").getPath());
 		fileConfig.setProperty("source1.delimiter", ",");
@@ -294,20 +276,20 @@ public class RecxxTest {
 		fileConfig.setProperty("source2.columns", Arrays.asList("Id|Integer", "Name|String", "Balance|Double", "Date|Date"));
 		fileConfig.setProperty("source2.keyColumns", "Id");
 		fileConfig.setProperty("source2.lineDelimiter", "\n");
-		
+
 		fileConfig.setProperty("destinations", "csvFile, console");
 		fileConfig.setProperty("csvFile.type", CsvDestination.class.getName());
 		fileConfig.setProperty("csvFile.filePath", FileUtils.getTempDirectoryPath() + TEMP_OUTPUT_FILE_CSV);
 		fileConfig.setProperty("console.type", ConsoleDestination.class.getName());
 	}
-	
+
 	@After
 	public void tearDown() throws Exception {
 		FileUtils.deleteQuietly(new File(FileUtils.getTempDirectoryPath(), TEMP_OUTPUT_FILE_CSV));
 	}
-	
+
 	// TODO Excel Test
 	// TODO Database Test
 
-	
+
 }

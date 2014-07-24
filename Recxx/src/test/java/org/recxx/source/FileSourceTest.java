@@ -27,7 +27,7 @@ public class FileSourceTest {
 
 	private static Logger LOGGER = Logger.getLogger(FileSourceTest.class); 
 
-	private static final int FILE_ROW_COUNT = 1000;
+	private static final int FILE_ROW_COUNT = 10000;
 	private static String unixFilePath = System.getProperty("java.io.tmpdir") + 
 			System.getProperty("file.separator") +
 			"unixFile.csv";

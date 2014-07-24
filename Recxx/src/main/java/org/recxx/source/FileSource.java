@@ -24,7 +24,7 @@ import org.recxx.utils.csv.CSVParser;
 public abstract class FileSource implements Source<Key> {
 
 	public static final Logger LOGGER = Logger.getLogger(FileSource.class);
-	
+
 	private static final String READ_ONLY = "r";
 
 	protected FileMetaData fileMetaData;
@@ -35,7 +35,7 @@ public abstract class FileSource implements Source<Key> {
 
 	private FileChannel channel;
 	private Charset charset;
-	
+
 	protected FileSource(String alias, FileMetaData metaData) {
 		this.alias = alias;
 		this.fileMetaData = metaData;
@@ -55,21 +55,21 @@ public abstract class FileSource implements Source<Key> {
 	public String getAlias() {
 		return alias;
 	}
-	
+
 	protected List<Class<?>> getHeaderColumnTypes(int size) {
 		List<Class<?>> columnTypes = new ArrayList<Class<?>>();
 		for (int i = 0; i < size; i++) {
-			columnTypes.add(String.class);			
+			columnTypes.add(String.class);
 		}
 		return columnTypes;
 	}
-	
+
 	protected List<?> parseRow(String line, List<Class<?>> columnTypes) {
 		CSVParser parser = new CSVParser(fileMetaData.getDelimiter().charAt(0), CSVParser.DEFAULT_QUOTE_CHARACTER, CSVParser.DEFAULT_ESCAPE_CHARACTER, false);
 		String[] fields;
 		List<Object> row = null;
 		try {
-			fields = parser.parseLine(line);
+			fields = parser.parseLineMulti(line);
 			row = new ArrayList<Object>(fields.length);
 			for (int i = 0; i < fields.length; i++) {
 				if (fields[i].isEmpty()) {
@@ -78,31 +78,31 @@ public abstract class FileSource implements Source<Key> {
 				else {
 					try {
 						row.add(convertUtilsBean.convert(fields[i], columnTypes.get(i)));
-					} 
+					}
 					catch (ConversionException ce) {
-						String message = "Source '" + getAlias() + "': Error attempting to convert value '" + fields[i] + 
+						String message = "Source '" + getAlias() + "': Error attempting to convert value '" + fields[i] +
 								"' which should be type '" + columnTypes.get(i) + "', please correct the configuration or data";
 						LOGGER.error(message, ce);
 						throw new RuntimeException(message, ce);
 					}
 					catch (RuntimeException e) {
-						String message = "Source '" + getAlias() + "': Error attempting to parse the row '" + line + 
+						String message = "Source '" + getAlias() + "': Error attempting to parse the row '" + line +
 								"' which should be parseable into '" + columnTypes.toString() + "', please correct the column configuration or data";
 						LOGGER.error(message, e);
 						throw new RuntimeException(message, e);
 					}
 				}
 			}
-		} 
+		}
 		catch (IOException e) {
-			String message = "Source '" + getAlias() + "': Error attempting to parse '" + line + 
+			String message = "Source '" + getAlias() + "': Error attempting to parse '" + line +
 					"', please correct the configuration or data";
 			LOGGER.error(message, e);
 			throw new RuntimeException(message, e);
 		}
 		return row;
 	}
-	
+
 	protected boolean isCurrentLineDelimiter(String delimiter, Character... characters) {
 		StringBuilder sb = new StringBuilder(2);
 		if (delimiter.length() == characters.length) {
@@ -119,32 +119,32 @@ public abstract class FileSource implements Source<Key> {
 			return (new String(new byte[] {b})).charAt(0);
 		}
 		else {
-			if (charset == null) 
+			if (charset == null)
 				charset = Charset.forName(fileMetaData.getEncoding());
-			return (new String(new byte[] {b}, charset)).charAt(0); 
+			return (new String(new byte[] {b}, charset)).charAt(0);
 		}
 	}
 
 	public List<Column> getColumns() {
 		return fileMetaData.getColumns();
 	}
-	
+
 	public List<String> getKeyColumns() {
 		return fileMetaData.getKeyColumns();
 	}
-	
+
 	public List<String> getCompareColumns() {
 		return fileMetaData.getColumnsToCompare();
 	}
-	
+
 	public List<String> getIgnoreColumns() {
 		return fileMetaData.getColumnsToIgnore();
 	}
-	
+
 	public int getColumnIndex(String name) {
 		return fileMetaData.getColumnNames().indexOf(name);
 	}
-	
+
 	public void close() {
 		LOGGER.info("Closing file: " + fileMetaData.getFilePath());
 		try {
@@ -170,7 +170,7 @@ public abstract class FileSource implements Source<Key> {
 		int carriageReturns = 0;
 		String delimiter = Default.UNIX_LINE_DELIMITER;
 		StringBuilder sb = new StringBuilder();
-	
+
 		byteBuffer.rewind();
 		char pp = 'p';
 		char p = ' ';
