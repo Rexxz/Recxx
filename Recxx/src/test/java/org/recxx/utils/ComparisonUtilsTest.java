@@ -25,7 +25,7 @@ public class ComparisonUtilsTest {
 	private short oneShort = 1;
 	private short minusOneShort = -1;
 	private short twoShort = 2;
-	
+
 	@Test
 	public void testStrings() {
 		assertEquals(true, ComparisonUtils.compare("Sausage", "Bacon").isDifferent());
@@ -83,7 +83,7 @@ public class ComparisonUtilsTest {
 		assertEquals(true, ComparisonUtils.compare(Short.valueOf(oneShort), Short.valueOf(twoShort)).isDifferent());
 		assertEquals(true, ComparisonUtils.compare(Short.valueOf(oneShort), Short.valueOf(minusOneShort)).isDifferent());
 	}
-	
+
 	@Test
 	public void testShortsCrossedWithInts() {
 		assertEquals(true, ComparisonUtils.compare(oneShort, 2).isDifferent());
@@ -149,7 +149,7 @@ public class ComparisonUtilsTest {
 		assertEquals(false, ComparisonUtils.compare(Float.valueOf(0.00000124f), Double.valueOf(0.00000123d)).isDifferent());  // Below default smallest absolute minimum level
 		assertEquals(true, ComparisonUtils.compare(Float.valueOf(1.0124f), Double.valueOf(1.0123d),BigDecimal.valueOf(0),BigDecimal.valueOf(0)).isDifferent());
 	}
-	
+
 	@Test
 	public void testDoubles() {
 		assertEquals(true, ComparisonUtils.compare(1d, 2d).isDifferent());
@@ -178,46 +178,46 @@ public class ComparisonUtilsTest {
 		assertEquals(true, ComparisonUtils.compare(null, BigDecimal.valueOf(1.0123d),BigDecimal.valueOf(0),BigDecimal.valueOf(0)).isDifferent());
 		assertEquals(false, ComparisonUtils.compare(BigDecimal.valueOf(10d), 		// Diff 20% but Abs diff = diff tolerance
 													BigDecimal.valueOf(12d),
-													ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE, 
-													BigDecimal.valueOf(0.01), 
+													ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE,
+													BigDecimal.valueOf(0.01),
 													BigDecimal.valueOf(2d)).isDifferent());
 		assertEquals(false, ComparisonUtils.compare(BigDecimal.valueOf(100d), 		// Diff 2%, but Abs diff = diff tolerance
 													BigDecimal.valueOf(102d),
-													ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE, 
-													BigDecimal.valueOf(0.01), 
+													ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE,
+													BigDecimal.valueOf(0.01),
 													BigDecimal.valueOf(2d)).isDifferent());
 		assertEquals(true, ComparisonUtils.compare(BigDecimal.valueOf(100d), 		// Diff 2%, Abs diff > diff tolerance
 													BigDecimal.valueOf(102d),
-													ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE, 
-													BigDecimal.valueOf(0.01), 
+													ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE,
+													BigDecimal.valueOf(0.01),
 													BigDecimal.valueOf(1d)).isDifferent());
 		assertEquals(false, ComparisonUtils.compare(BigDecimal.valueOf(100d), 		// Diff 5%, Abs diff < diff tolerance
 													BigDecimal.valueOf(105d),
-													ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE, 
-													BigDecimal.valueOf(0.01), 
+													ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE,
+													BigDecimal.valueOf(0.01),
 													BigDecimal.valueOf(6d)).isDifferent());
 	}
-	
+
 	@Test
 	public void testIncomparables() {
 		assertEquals(true, ComparisonUtils.compare(dateOne, oneByte).isDifferent());
 	}
-	
+
 	@Test
 	public void testPercentageDifference() {
-		assertEquals(new BigDecimal(0.05, new MathContext(5)),ComparisonUtils.percentageDifference(new BigDecimal(100), new BigDecimal(105)));
+		assertEquals(new BigDecimal("0.0500000000000000000000000"),ComparisonUtils.percentageDifference(new BigDecimal(100), new BigDecimal(105)));
 	}
 
 	@Test
 	public void testPercentageMatch() {
-		assertEquals(new BigDecimal(0.70, new MathContext(6)),ComparisonUtils.percentageMatch(new BigDecimal(70), new BigDecimal(100)));
+		assertEquals(new BigDecimal("0.700000"),ComparisonUtils.percentageMatch(new BigDecimal(70), new BigDecimal(100)));
 	}
 
 	@Test
 	public void testPercentageMatchEqual() {
 		assertEquals(BigDecimal.ONE,ComparisonUtils.percentageMatch(new BigDecimal(100), new BigDecimal(100)));
 	}
-	
+
 	@Test
 	public void testPercentageMatchBothZero() {
 		assertEquals(BigDecimal.ONE,ComparisonUtils.percentageMatch(BigDecimal.ZERO, BigDecimal.ZERO));
@@ -227,17 +227,17 @@ public class ComparisonUtilsTest {
 	public void testPercentageMatchFirstZero() {
 		assertEquals(BigDecimal.ZERO,ComparisonUtils.percentageMatch(BigDecimal.ZERO, new BigDecimal(100)));
 	}
-	
+
 	@Test
 	public void testPercentageMatchSecondZero() {
 		assertEquals(BigDecimal.ZERO,ComparisonUtils.percentageMatch(new BigDecimal(100), BigDecimal.ZERO));
 	}
-	
+
 	@Test
 	public void testPercentageMatchDouble() {
 		assertEquals(new BigDecimal(0.70, new MathContext(6)),ComparisonUtils.percentageMatch(70d, 100d));
 		assertEquals(BigDecimal.ZERO,ComparisonUtils.percentageMatch(10d, 0d));
 	}
-	
-	
+
+
 }

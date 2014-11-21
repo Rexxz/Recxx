@@ -10,15 +10,17 @@ import org.recxx.destination.ConsoleDestination;
 import org.recxx.destination.CsvDestination;
 import org.recxx.destination.DatabaseDestination;
 import org.recxx.destination.Destination;
+import org.recxx.destination.ExcelSummaryDestination;
 
 public class AbstractDestinationFactory {
 
-	private Map<Class<?>, DestinationFactory> destinationFactoryMap = new HashMap<Class<?>, DestinationFactory>();	
+	private Map<Class<?>, DestinationFactory> destinationFactoryMap = new HashMap<Class<?>, DestinationFactory>();
 
 	public AbstractDestinationFactory() {
 		addDestinationFactory(CsvDestination.class, new CsvDestinationFactory());
 		addDestinationFactory(ConsoleDestination.class, new ConsoleDestinationFactory());
 		addDestinationFactory(DatabaseDestination.class, new DatabaseDestinationFactory());
+		addDestinationFactory(ExcelSummaryDestination.class, new ExcelDestinationFactory());
 	}
 
 	public List<Destination> getDestinations(RecxxConfiguration configuration) {
@@ -42,13 +44,13 @@ public class AbstractDestinationFactory {
 			} catch (ClassNotFoundException e) {
 				throw new IllegalArgumentException("'" + destinationAlias + ".type' specified incorrectly in configuration, " +
 						"configuration requires one of the following values: " + destinationFactoryMap.keySet(), e);
-			} 
+			}
 		}
 		return destinations;
 	}
-	
+
 	public void addDestinationFactory (Class<?> sourceClass, DestinationFactory destinationFactory) {
 		destinationFactoryMap.put(sourceClass, destinationFactory);
 	}
-	
+
 }

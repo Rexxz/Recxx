@@ -12,7 +12,7 @@ public abstract class AbstractDestination implements Destination {
 	private String lineDelimiter = Default.LINE_DELIMITER;
 
 	private SimpleDateFormat dateFormatter = Default.DATE_FORMAT;
-	private DecimalFormat percentFormatter = Default.SIXDP_PERCENT_FORMAT;
+	private DecimalFormat percentFormatter = Default.TWENTY_FIVE_DP_PERCENT_FORMAT;
 	private Summary summary;
 
 	public Summary getSummary() {

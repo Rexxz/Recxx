@@ -122,7 +122,7 @@ public class Difference {
 	}
 	
 	public String toOutputString(){
-		return toOutputString(Default.COMMA, Default.DATE_FORMAT, Default.SIXDP_PERCENT_FORMAT);
+		return toOutputString(Default.COMMA, Default.DATE_FORMAT, Default.TWENTY_FIVE_DP_PERCENT_FORMAT);
 	}
 	
 	public String toOutputString(String delimiter, SimpleDateFormat dateFormatter, DecimalFormat percentFormat) {
