@@ -17,7 +17,7 @@ import org.recxx.utils.ComparisonUtils;
 @Entity
 @Table(name="RecxxSummary")
 public class Summary implements Serializable {
-	
+
 	private static final long serialVersionUID = 4467773888173148278L;
 
 	@Id
@@ -34,9 +34,11 @@ public class Summary implements Serializable {
 	private Integer matchCount;
 	private BigDecimal alias1MatchPercent;
 	private BigDecimal alias2MatchPercent;
-	
+	private Long alias1ExecutionTime;
+	private Long alias2ExecutionTime;
+
 	public Summary () {}
-	
+
 	private Summary(Builder builder) {
 		this.configName = builder.configName;
 		this.subject = builder.subject;
@@ -49,10 +51,12 @@ public class Summary implements Serializable {
 		this.matchCount = builder.matchCount;
 		this.alias1MatchPercent = builder.alias1MatchPercent;
 		this.alias2MatchPercent = builder.alias2MatchPercent;
+		this.alias1ExecutionTime = builder.alias1ExecutionTime;
+		this.alias2ExecutionTime = builder.alias2ExecutionTime;
 	}
-	
+
 	public static class Builder {
-		
+
 		String configName;
 		String subject;
 		Date businessDate;
@@ -64,42 +68,54 @@ public class Summary implements Serializable {
 		String alias2;
 		BigDecimal alias1MatchPercent;
 		BigDecimal alias2MatchPercent;
-		
+		Long alias1ExecutionTime;
+		Long alias2ExecutionTime;
+
 		public Builder configName(String name) {
 			configName = name;
 			return this;
 		}
-		
+
 		public Builder subject(String sub) {
 			subject = sub;
 			return this;
 		}
-		
+
 		public Builder alias1(String alias) {
 			alias1 = alias;
 			return this;
 		}
-		
+
 		public Builder alias2(String alias) {
 			alias2 = alias;
 			return this;
 		}
-		
+
 		public Builder businessDate(Date date) {
 			businessDate = date;
 			return this;
 		}
-		
+
 		public Builder alias1Count(Integer count) {
 			alias1Count = count;
 			return this;
 		}
-		
+
 		public Builder alias2Count(Integer count) {
 			alias2Count = count;
 			return this;
 		}
-		
+
+		public Builder alias1ExecutionTime(Long timeMillis) {
+			alias1ExecutionTime = timeMillis;
+			return this;
+		}
+
+		public Builder alias2ExecutionTime(Long timeMillis) {
+			alias2ExecutionTime = timeMillis;
+			return this;
+		}
+
 		private void calcPerecntages() {
 			if (alias1Count != null && alias2Count != null) {
 				alias1MatchPercent = ComparisonUtils.percentageMatch(matchCount, alias1Count);
@@ -111,7 +127,7 @@ public class Summary implements Serializable {
 			matchCount = count;
 			return this;
 		}
-		
+
 		public Summary build() {
 			if (reconciliationDate == null) {
 				reconciliationDate = new Date();
@@ -217,6 +233,22 @@ public class Summary implements Serializable {
 		this.alias2MatchPercent = alias2MatchPercent;
 	}
 
+	public Long getAlias1ExecutionTime() {
+		return alias1ExecutionTime;
+	}
+
+	public void setAlias1ExecutionTime(Long executionTime) {
+		this.alias1ExecutionTime = executionTime;
+	}
+
+	public Long getAlias2ExecutionTime() {
+		return alias2ExecutionTime;
+	}
+
+	public void setAlias2ExecutionTime(Long executionTime) {
+		this.alias2ExecutionTime = executionTime;
+	}
+
 	public String toOutputString(){
 		return toOutputString(Default.COMMA, Default.LINE_DELIMITER, Default.PERCENT_FORMAT);
 	}
@@ -225,10 +257,10 @@ public class Summary implements Serializable {
 		StringBuilder sb = new StringBuilder();
 		sb.append(lineDelimiter)
 		.append(lineDelimiter)
-//		.append("ConfigName, ").append(getConfigName()).append(lineDelimiter)
-//		.append("Subject, ").append(getSubject()).append(lineDelimiter)
-//		.append("BusinessDate, ").append(getBusinessDate()).append(lineDelimiter)
-//		.append(lineDelimiter)
+		.append("ConfigName, ").append(getConfigName()).append(lineDelimiter)
+		.append("Subject, ").append(getSubject()).append(lineDelimiter)
+		.append("BusinessDate, ").append(getBusinessDate()).append(lineDelimiter)
+		.append(lineDelimiter)
 		.append("======================").append(lineDelimiter)
 		.append("Reconciliation Summary").append(lineDelimiter)
 		.append("======================").append(lineDelimiter)
@@ -236,7 +268,9 @@ public class Summary implements Serializable {
 		.append(getAlias2()).append(" rows").append(delimiter).append(getAlias2Count()).append(lineDelimiter)
 		.append(getAlias1()).append(" matched ").append(getAlias2()).append(delimiter).append(getMatchCount()).append(lineDelimiter)
 		.append(getAlias1()).append(" matched ").append(getAlias2()).append(delimiter).append(Default.PERCENT_FORMAT.format(getAlias1MatchPercent())).append(lineDelimiter)
-		.append(getAlias2()).append(" matched ").append(getAlias1()).append(delimiter).append(Default.PERCENT_FORMAT.format(getAlias2MatchPercent())).append(lineDelimiter);
+		.append(getAlias2()).append(" matched ").append(getAlias1()).append(delimiter).append(Default.PERCENT_FORMAT.format(getAlias2MatchPercent())).append(lineDelimiter)
+		.append(getAlias1()).append(" time(ms) ").append(delimiter).append(getAlias1ExecutionTime()).append(lineDelimiter)
+		.append(getAlias2()).append(" time(ms) ").append(delimiter).append(getAlias2ExecutionTime()).append(lineDelimiter);
 		return sb.toString();
 	}
 
@@ -261,5 +295,6 @@ public class Summary implements Serializable {
     public int hashCode() {
         return summaryId * 17;
     }
+
 
 }

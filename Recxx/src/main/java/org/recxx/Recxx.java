@@ -313,13 +313,17 @@ public class Recxx {
             .alias1(source1.getAlias())
             .alias2(source2.getAlias())
             .matchCount(matchCount)
+            .alias1ExecutionTime(source1.getExecutionTimeMillis())
+            .alias2ExecutionTime(source2.getExecutionTimeMillis())
             .build();
 		writeSummary(destinations, summary);
 
         close(destinations);
 
         source1.close();
+        source1 = null;
         source2.close();
+        source2 = null;
 
         LOGGER.info("Memory used: " + SystemUtils.memoryUsed() + "%");
         LOGGER.info("Compare complete in " + ((System.currentTimeMillis() - t) / 1000d) +"s");

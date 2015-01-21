@@ -81,7 +81,9 @@ public abstract class FileSource implements Source<Key> {
 					}
 					catch (ConversionException ce) {
 						String message = "Source '" + getAlias() + "': Error attempting to convert value '" + fields[i] +
-								"' which should be type '" + columnTypes.get(i) + "', please correct the configuration or data";
+								"' which should be type '" + columnTypes.get(i) + "' for field number <" + (i + 1)  +
+								">, file column name '" + fileMetaData.getColumnNames().get(i) +
+								"', please correct the configuration or data";
 						LOGGER.error(message, ce);
 						throw new RuntimeException(message, ce);
 					}
@@ -157,6 +159,8 @@ public abstract class FileSource implements Source<Key> {
 				Thread.sleep(3000);
 				file.delete();
 			}
+			fileMetaData = null;
+			charset = null;
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (InterruptedException e) {

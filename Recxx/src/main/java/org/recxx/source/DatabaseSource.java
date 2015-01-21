@@ -39,6 +39,7 @@ public class DatabaseSource implements Source<Key> {
 	private FileSource fileSource;
     private Connection connection;
     private Statement statement;
+    private long executionTimeMillis;
 
 	public DatabaseSource(String alias, DatabaseMetaData databaseMetaData) {
 		this.alias = alias;
@@ -47,14 +48,18 @@ public class DatabaseSource implements Source<Key> {
 
 	public Source<Key> call() throws Exception {
 		openDB();
+		long startTimeMillis = System.currentTimeMillis();
 		ResultSet resultset = getResultset();
+		executionTimeMillis = System.currentTimeMillis() - startTimeMillis;
+		LOGGER.info("Source '" + getAlias() + "' completed query in " + executionTimeMillis + " ms");
         LOGGER.info("Source '" + getAlias() + "': Persisting data to file");
         fileMetaData = configureFileMetaData(resultset.getMetaData(), databaseMetaData);
 		writeFile(resultset);
 		resultset = null;
 		closeDB();
 		fileSource = new RandomAccessFileSource(alias, fileMetaData);
-		return fileSource.call();
+		fileSource.call();
+		return this;
 	}
 
 	private void writeFile(ResultSet resultset) throws IOException, SQLException {
@@ -246,7 +251,13 @@ public class DatabaseSource implements Source<Key> {
 
 	public void close() {
 		fileSource.close();
+		fileSource = null;
+		fileMetaData = null;
 	}
 
+	@Override
+	public long getExecutionTimeMillis() {
+		return executionTimeMillis;
+	}
 
 }

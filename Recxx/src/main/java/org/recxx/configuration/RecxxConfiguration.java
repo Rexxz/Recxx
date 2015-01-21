@@ -38,7 +38,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	private static Logger LOGGER = Logger.getLogger(RecxxConfiguration.class);
 
 	private CombinedConfiguration config;
-	
+
 	public RecxxConfiguration() throws ConfigurationException {
 		this(new PropertiesConfiguration());
 	}
@@ -52,14 +52,14 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		config.addConfiguration(new SystemConfiguration());
 		config.addConfiguration(configuration);
 	}
-	
+
 	public RecxxConfiguration(DataSource dataSource, String configName) throws ConfigurationException {
 		config = new CombinedConfiguration();
 		config.addConfiguration(new SystemConfiguration());
 		DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(dataSource, Default.DATABASE_CONFIG_TABLE, Default.CONFIG_NAME, Default.CONFIG_KEY, Default.CONFIG_VALUE, configName);
 		config.addConfiguration(databaseConfiguration);
 	}
-	
+
 	public RecxxConfiguration(String configName, String alias, PropertiesConfiguration configuration) throws ConfigurationException {
 		config = new CombinedConfiguration();
 		config.addConfiguration(new SystemConfiguration());
@@ -69,28 +69,28 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		pc.copy(databaseConfiguration);
 		config.addConfiguration(pc);
 	}
-	
+
 	public boolean containsKey(String key) {
 		return config.containsKey(key);
 	}
-	
+
 	public Iterator<String> getKeys() {
 		return config.getKeys();
 	}
-	
+
 	public Object getProperty(String property) {
 		return config.getProperty(property);
 	}
-	
+
 	public boolean isEmpty() {
 		return config.isEmpty();
 	}
-	
+
 	@Override
 	public String[] getStringArray(String key) {
 		return config.getStringArray(key);
 	}
-	
+
 	public List<String> getStrings(String key) {
 		String[] stringArray = getStringArray(key);
 		if (stringArray == null || stringArray.length == 0) {
@@ -100,7 +100,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 			return Arrays.asList(stringArray);
 		}
 	}
-	
+
 	public List<String> getStrings(String key, String defaultKey) {
 		List<String> strings = getStrings(key);
 		if (strings.isEmpty()) {
@@ -108,7 +108,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		}
 		return strings;
 	}
-	
+
 	public String configureSubject() {
 		return getString("SUBJECT");
 	}
@@ -139,7 +139,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		}
 		return dateFormats;
 	}
-	
+
 	public String configureLineDelimiter(String alias) {
 		String lineDelimiterString = getString(alias + ".lineDelimiter");
 		String lineDelimiter;
@@ -151,7 +151,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		}
 		return lineDelimiter;
 	}
-	
+
 	public String configureFilePath(String alias) {
 		return configureFilePath(alias, true);
 	}
@@ -164,7 +164,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		}
 		return filePath;
 	}
-	
+
 	public String configureFileEncoding(String alias) {
 		return getString(alias + ".encoding");
 	}
@@ -178,7 +178,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		}
 		return filePath;
 	}
-	
+
 	public boolean configureIgnoreCase() {
 		return getBoolean("ignoreCase", false);
 	}
@@ -187,7 +187,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		return getBigDecimal("toleranceLevelPercent", ComparisonUtils.DEFAULT_TOLERANCE_PERCENTAGE)
 			.divide(new BigDecimal(100));
 	}
-	
+
 	public BigDecimal configureToleranceAbsolute() {
 		return getBigDecimal("toleranceLevelAbsolute", ComparisonUtils.DEFAULT_TOLERANCE_ABSOLUTE);
 	}
@@ -195,7 +195,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	public BigDecimal configureSmallestAbsoluteValue(){
 		return getBigDecimal("smallestAbsoluteValue", ComparisonUtils.DEFAULT_SMALLEST_ABSOLUTE_VALUE);
 	}
-	
+
 	public boolean configureIgnoreHeaderRow(String alias) {
 		return getBoolean(alias + ".ignoreHeaderRow", true);
 	}
@@ -232,9 +232,9 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		List<Column> columnDefinitions = new ArrayList<Column>();
 		for (String column : columns) {
 			String[] split = column.split("\\" + Default.PIPE_DELIMITER);
-			String columnName; String columnType; 
+			String columnName; String columnType;
 			switch (split.length) {
-				case 2:	
+				case 2:
 					columnName = split[0];
 					columnType = split[1];
 					break;
@@ -242,26 +242,26 @@ public class RecxxConfiguration extends AbstractConfiguration {
 					columnName = Default.UNKNOWN_COLUMN_NAME;
 					columnType = split[0];
 					break;
-		
+
 				case 0:
 				default:
 					throw new IllegalArgumentException("'" + alias + ".columns' incorrectly specified in configuration, " +
 							"this component must have columns, configured using '<alias>.columns=<name>|<type>, <name>|<type>...'," +
 							" column definition '" + column + "' cannot be split without separator '" + Default.PIPE_DELIMITER + "'");
-			} 
-			
+			}
+
 			Class<?> clazz = classAbbreviationMap.get(columnType);
 			if (clazz == null) {
 				throw new IllegalArgumentException("'" + alias + ".columns' incorrectly specified in configuration, " +
 						"this component must have columns, configured using '<alias>.columns=<name>|<type>, <name>|<type>...'," +
-						" column definition '" + column + "' received and no matching class definition found for '" + columnType + 
+						" column definition '" + column + "' received and no matching class definition found for '" + columnType +
 						"' in " + classAbbreviationMap.toString());
 			}
 			columnDefinitions.add(new Column(columnName, clazz));
 		}
 		return columnDefinitions;
 	}
-	
+
 	public String configureSourceType(String alias, Map<Class<?>, SourceFactory> sourceFactoryMap) {
 		String sourceType = getString(alias + ".type");
 		if (sourceType == null) {
@@ -270,7 +270,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		}
 		return sourceType;
 	}
-	
+
 	public List<String> configureDestinationAliases() {
 		List<String> destinationAliases = getStrings("destinations");
 		if (destinationAliases == null || destinationAliases.isEmpty()) {
@@ -287,7 +287,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		}
 		return destinationType;
 	}
-	
+
 	public List<String> configureSourceAliases() {
 		List<String> sourceAliases = getStrings("sources");
 		if (sourceAliases == null || sourceAliases.isEmpty()) {
@@ -296,7 +296,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		}
 		return sourceAliases;
 	}
-	
+
 	public boolean configureFormatComparison(String alias) {
 		return getBoolean(alias + ".formatComparison", false);
 	}
@@ -310,7 +310,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	}
 
 	// Database configuration
-	
+
 	public String configureDatabaseDriver(String... aliases) {
 		String databaseDriver = null;
 		for (String alias : aliases) {
@@ -327,8 +327,8 @@ public class RecxxConfiguration extends AbstractConfiguration {
 			throw new IllegalArgumentException(sb.toString());
 		}
 		return databaseDriver;
-	}	
-	
+	}
+
 	public String configureDatabaseUrl(String... aliases) {
 		String databaseUrl = null;
 		for (String alias : aliases) {
@@ -345,7 +345,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 			throw new IllegalArgumentException(sb.toString());
 		}
 		return databaseUrl;
-	}	
+	}
 
 	public String configureDatabaseUserId(String... aliases) {
 		String databaseUserId = null;
@@ -362,7 +362,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 			throw new IllegalArgumentException(sb.toString());
 		}
 		return databaseUserId;
-	}	
+	}
 
 	public String configureDatabasePassword(String... aliases) {
 		String databasePassword = null;
@@ -379,7 +379,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 			throw new IllegalArgumentException(sb.toString());
 		}
 		return databasePassword;
-	}	
+	}
 
 	public String configureSql(String alias) {
 		String databasePassword = getString(alias + ".sql");
@@ -387,13 +387,13 @@ public class RecxxConfiguration extends AbstractConfiguration {
 			throw new IllegalArgumentException("'" + alias + ".sql' not specified in configuration");
 		}
 		return databasePassword;
-	}	
+	}
 
 	@Override
 	protected void addPropertyDirect(String key, Object value) {
-		config.addProperty(key, value);					
+		config.addProperty(key, value);
 	}
-	
+
 	@Override
 	public void setProperty(String key, Object value) {
 		config.setProperty(key, value);
@@ -401,14 +401,22 @@ public class RecxxConfiguration extends AbstractConfiguration {
 
 	@Override
 	public String toString() {
-		return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE);
+		StringBuilder stringBuilder = new StringBuilder(10000);
+		for (Iterator<String> iterator = config.getKeys(); iterator.hasNext();) {
+			String parameterName = iterator.next();
+			stringBuilder.append(parameterName)
+				.append(" = ")
+				.append(config.getProperty(parameterName).toString().replace("[","").replace("]",""))
+				.append(System.getProperty("line.separator"));
+		}
+		return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE).concat(stringBuilder.toString());
 	}
 
 	@Override
 	public boolean equals(Object that) {
 		return EqualsBuilder.reflectionEquals(this, that, false);
 	}
-	
+
 	@Override
 	public int hashCode() {
 		return HashCodeBuilder.reflectionHashCode(this, false);
@@ -420,7 +428,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 			.databaseUrl(configureDatabaseUrl(alias))
 			.databaseUserId(configureDatabaseUserId(alias))
 			.databasePassword(configureDatabasePassword(alias))
-			.build();	
+			.build();
 		return new DriverManagerWrappedDataSource(databaseMetaData);
 	}
 

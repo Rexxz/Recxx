@@ -26,23 +26,24 @@ import org.recxx.domain.ExcelType;
 import org.recxx.domain.Key;
 
 public class ExcelSource implements Source<Key> {
-	
-	private static Logger LOGGER = Logger.getLogger(ExcelSource.class); 
+
+	private static Logger LOGGER = Logger.getLogger(ExcelSource.class);
 
 	private final Map<Key, ExcelCoordinates> coordinatesMap = new HashMap<Key, ExcelCoordinates>();
 	private final String alias;
 	private final boolean formatComparison;
 	private final List<String> omitSheets;
-	
+
 	private final Workbook workbook;
 	private final List<Column> columns = new ArrayList<Column>();
 
+	private long executionTimeMillis = 0;
 
 	public ExcelSource(String alias, ExcelFileMetaData fileMetaData) throws Exception {
 		this.alias = alias;
 		this.formatComparison = fileMetaData.isFormatComparison();
 		this.omitSheets = fileMetaData.getOmitSheets();
-		
+
 		try {
 			InputStream inputStream = new FileInputStream(fileMetaData.getFilePath());
 			workbook = WorkbookFactory.create(inputStream);
@@ -51,9 +52,11 @@ public class ExcelSource implements Source<Key> {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	public Source<Key> call() throws Exception {
-		
+
+		long startTimeMillis = System.currentTimeMillis();
+
 		for (int i = 0; i < workbook.getNumberOfSheets(); i++) {
 			Sheet sheet = workbook.getSheetAt(i);
 
@@ -61,17 +64,17 @@ public class ExcelSource implements Source<Key> {
 				LOGGER.info(alias + ": Omitting " + sheet.getSheetName());
 			}
 			else {
-				
+
 				LOGGER.info(alias + ": Mapping " + sheet.getSheetName());
 				int coordinateCount = 0;
-				
+
 				for(Row row : sheet) {
-				
+
 			    	for (ExcelType type : ExcelType.values()) {
-			    		
+
 			    		if (type.equals(ExcelType.FORMAT) && formatComparison ||
 			    				!type.equals(ExcelType.FORMAT) ) {
-			    			
+
 			    			Key key = new Key(Arrays.asList(sheet.getSheetName(), Integer.toString(row.getRowNum() + 1), type.name()));
 
 			    			if (rowContainsData(row)) {
@@ -83,7 +86,7 @@ public class ExcelSource implements Source<Key> {
 					}
 				}
 				LOGGER.info(alias + ": Mapped " + sheet.getSheetName() + " : " + coordinateCount);
-				
+
 		    }
 		}
 		LOGGER.info(alias + ": Mapping complete " + coordinatesMap.size() + " keys loaded");
@@ -93,7 +96,7 @@ public class ExcelSource implements Source<Key> {
 			Column column = new Column(columnName, String.class);
 			columns.add(column);
 		}
-
+		executionTimeMillis = System.currentTimeMillis() - startTimeMillis;
 		return this;
 	}
 
@@ -116,7 +119,7 @@ public class ExcelSource implements Source<Key> {
 					break;
 				default:
 				}
-				if (containsData) continue;	
+				if (containsData) continue;
 			}
 		}
 		return containsData;
@@ -130,11 +133,11 @@ public class ExcelSource implements Source<Key> {
 		ExcelCoordinates coordinates = coordinatesMap.get(key);
 		Row row = workbook.getSheet(coordinates.getSheetName()).getRow(coordinates.getRow());
 		ArrayList<Object> returnRow = new ArrayList<Object>();
-		
+
  	   for(int cn = 0; cn < row.getLastCellNum(); cn++) {
 
  		   	Cell cell = row.getCell(cn, Row.CREATE_NULL_AS_BLANK);
-    	   
+
 			ExcelType type = coordinates.getType();
 			if (type.equals(ExcelType.CELL)) {
 				switch (cell.getCellType()) {
@@ -157,7 +160,7 @@ public class ExcelSource implements Source<Key> {
 			    default:
 			    	returnRow.add(null);
 			 	}
-			} 
+			}
 			else {
 				// TODO Something with formatting!
 			}
@@ -203,7 +206,12 @@ public class ExcelSource implements Source<Key> {
 	}
 
 	public void close() {
-		
+
+	}
+
+	@Override
+	public long getExecutionTimeMillis() {
+		return executionTimeMillis;
 	}
 
 
