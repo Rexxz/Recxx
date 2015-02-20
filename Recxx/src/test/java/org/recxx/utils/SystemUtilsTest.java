@@ -11,8 +11,10 @@ public class SystemUtilsTest {
 	private static final String _01_JAN_2012 = "01-Jan-2012";
 	private static final String FILE_PATH = "/tmp/";
 	private static final String STRING_WITH_ESCAPED_BUSINESS_DATE = "date=${BUSINESS_DATE}";
+	private static final String STRING_WITH_ESCAPED_BUSINESS_DATE_JDBC_TEMPLATE_STANDARD = "date=:BUSINESS_DATE";
 	private static final String STRING_WITH_ESCAPED_PATH_AND_BUSINESS_DATE = "${FILE_PATH}${BUSINESS_DATE}file";
-	
+	private static final String STRING_WITH_ESCAPED_PATH_AND_BUSINESS_DATE_JDBC_TEMPLATE_STANDARD = ":FILE_PATH:BUSINESS_DATEfile";
+
 	@Before
 	public void setUp() throws Exception {
 		System.setProperty("BUSINESS_DATE", _01_JAN_2012);
@@ -25,15 +27,25 @@ public class SystemUtilsTest {
 	}
 
 	@Test
+	public void testEscapedBusinessDateJdbcTemplateStandard() {
+		assertEquals("date=" + _01_JAN_2012, SystemUtils.replaceSystemProperties(STRING_WITH_ESCAPED_BUSINESS_DATE_JDBC_TEMPLATE_STANDARD));
+	}
+
+	@Test
 	public void testEscapedFilePathAndBusinessDate() {
 		assertEquals(FILE_PATH + _01_JAN_2012 + "file", SystemUtils.replaceSystemProperties(STRING_WITH_ESCAPED_PATH_AND_BUSINESS_DATE));
 	}
-	
+
+	@Test
+	public void testEscapedFilePathAndBusinessDateJdbcTemplateStandard() {
+		assertEquals(FILE_PATH + _01_JAN_2012 + "file", SystemUtils.replaceSystemProperties(STRING_WITH_ESCAPED_PATH_AND_BUSINESS_DATE_JDBC_TEMPLATE_STANDARD));
+	}
+
 	@Test
 	public void testMemoryUsed() {
 		assertNotNull(SystemUtils.memoryUsed());
 	}
-	
-	
+
+
 
 }
