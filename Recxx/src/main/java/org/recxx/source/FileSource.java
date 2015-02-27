@@ -9,6 +9,7 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.beanutils.ConvertUtilsBean;
@@ -35,6 +36,8 @@ public abstract class FileSource implements Source<Key> {
 
 	private FileChannel channel;
 	private Charset charset;
+
+	private long executionTimeMillis = 0;
 
 	protected FileSource(String alias, FileMetaData metaData) {
 		this.alias = alias;
@@ -212,6 +215,99 @@ public abstract class FileSource implements Source<Key> {
 		}
 		LOGGER.info(sb.toString());
 		return delimiter;
+	}
+
+	protected Key createKey(List<?> fields, String line, int lineNumber) {
+		List<String> keys =  new ArrayList<String>();
+		Key key = null;
+		try {
+			if (fileMetaData.getKeyColumns().contains(Default.EMPTY_KEY_COLUMN_NAME) &&
+					fileMetaData.getKeyColumns().size() == 1) {
+				key = new Key(String.valueOf(lineNumber + 1));
+			}
+			else {
+				if (fileMetaData.getKeyColumnIndexes().isEmpty()) {
+					throw new RuntimeException("Source '" + getAlias() + "': Key fields config is  " + fileMetaData.getKeyColumns() + " and field defined are " + fileMetaData.getColumns());
+				}
+				for (Integer index : fileMetaData.getKeyColumnIndexes()) {
+					keys.add(fields.get(index) == null ? Default.NULL : fields.get(index).toString());
+				}
+				key = new Key(keys);
+			}
+			if (getSourceDataMap().containsKey(key)) {
+				LOGGER.warn("Source '" + getAlias() + "': A duplicate key was found for: " + key.toOutputString(Default.COMMA) + " will suffix with a unique id");
+				int i = 0;
+				Key suffixedKey = new Key(key.toString() + "_" + i);
+				while (getSourceDataMap().containsKey(suffixedKey)) {
+					i++;
+					suffixedKey = new Key(key.toString() + "_" + i);
+				}
+				key = suffixedKey;
+			}
+		} catch (Exception e) {
+			LOGGER.error("Source '" + getAlias() + "': An error occurred trying to extract a key from the following line: '" + line + "'");
+		}
+		return key;
+	}
+
+	protected abstract Map<Key, ?> getSourceDataMap();
+
+	protected abstract void addRow(Key key, List<?> fields, int start, int end);
+
+	public Source<Key> call() {
+		StringBuilder line = new StringBuilder();
+		int start = 0;
+		boolean isFirstRow = true;
+		boolean isIgnoreHeaderRow = fileMetaData.isIgnoreHederRow();
+		String delimiter = getRowDelimiter();
+
+		LOGGER.info("Source '" + getAlias() + "': Processing file: " + fileMetaData.getFilePath());
+		boolean columnNamesNotSupplied = fileMetaData.getColumnNames().contains(Default.UNKNOWN_COLUMN_NAME);
+		if (columnNamesNotSupplied) {
+			isIgnoreHeaderRow = true;
+		}
+
+		long startTimeMillis = System.currentTimeMillis();
+		int i = 0;
+		char p = ' ';
+		while (byteBuffer.hasRemaining()) {
+			char c = decodeSingleByteToChar(byteBuffer.get());
+			if ( delimiter.length() == 1 && isCurrentLineDelimiter(delimiter, c)
+					|| (delimiter.length() == 2 && isCurrentLineDelimiter(delimiter, p, c))
+					|| !byteBuffer.hasRemaining() ) {
+				if (isFirstRow && isIgnoreHeaderRow) {
+					if (columnNamesNotSupplied) {
+						List<?> columns = parseRow(line.toString(), getHeaderColumnTypes(fileMetaData.getColumns().size()));
+						fileMetaData = FileMetaData.valueOf(fileMetaData, columns);
+					}
+					isFirstRow = false;
+				}
+				else {
+					if (line.length() != 0) {
+						List<?> fields = parseRow(line.toString(), fileMetaData.getColumnTypes());
+						Key key = createKey(fields, line.toString(), i);
+						addRow(key, fields, start, byteBuffer.position() - delimiter.length());
+						i++;
+						if (i % 10000 == 0) {
+							LOGGER.info("Source '" + getAlias() + "': Processed " + i + " rows");
+						}
+					}
+				}
+				start = byteBuffer.position();
+				line.setLength(0);
+			} else if (!delimiter.contains(String.valueOf(c))) {
+				line.append(c);
+			}
+			p = c;
+		}
+		LOGGER.info("Source '" + getAlias() + "': Processed " + i + " rows");
+		executionTimeMillis = System.currentTimeMillis() - startTimeMillis;
+		return this;
+	}
+
+	@Override
+	public long getExecutionTimeMillis() {
+		return executionTimeMillis;
 	}
 
 }
