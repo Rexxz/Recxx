@@ -6,6 +6,7 @@ import java.io.IOException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.recxx.configuration.RecxxConfiguration;
@@ -19,13 +20,17 @@ public class FileSourceFactoryTest {
 												+ "1,Name1" + System.getProperty("line.separator")
 												+ "2,Name2" + System.getProperty("line.separator");
 
-	private static PropertiesConfiguration propertiesConfig;
-	private static RecxxConfiguration config;
+	private PropertiesConfiguration propertiesConfig;
+	private RecxxConfiguration config;
 	private SourceFactory factory = new FileSourceFactory();
 
 	@BeforeClass
-	public static void setup() throws IOException {
+	public static void setupClass() throws IOException {
 		FileUtils.writeStringToFile(FILE, TEST_DATA);
+	}
+
+	@Before
+	public void setup() throws IOException {
 		propertiesConfig = new PropertiesConfiguration();
 		config = new RecxxConfiguration(propertiesConfig);
 	}
@@ -82,6 +87,5 @@ public class FileSourceFactoryTest {
 	public static void tearDown() {
 		if (FILE.exists()) FILE.delete();
 	}
-
 
 }
