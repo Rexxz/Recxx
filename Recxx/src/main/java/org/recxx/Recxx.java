@@ -112,7 +112,7 @@ public class Recxx {
 		long t = System.currentTimeMillis();
 		LOGGER.info("Starting sources");
 
-		ExecutorService executor = Executors.newFixedThreadPool(2);
+		ExecutorService executor = configuration.configureConcurrency() ? Executors.newFixedThreadPool(2) : Executors.newSingleThreadExecutor();
         executor.execute(task1);
         executor.execute(task2);
 

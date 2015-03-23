@@ -183,6 +183,10 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		return getBoolean("ignoreCase", false);
 	}
 
+	public boolean configureConcurrency() {
+		return getBoolean("concurrentExecution", true);
+	}
+
 	public BigDecimal configureToleranceLevel(){
 		return getBigDecimal("toleranceLevelPercent", ComparisonUtils.DEFAULT_TOLERANCE_PERCENTAGE)
 			.divide(new BigDecimal(100));
