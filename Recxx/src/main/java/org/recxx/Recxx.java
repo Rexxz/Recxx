@@ -2,9 +2,11 @@ package org.recxx;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -38,7 +40,7 @@ public class Recxx {
 	private String configName;
 	private RecxxConfiguration configuration;
 
-	private int reconciliationDifferences = 0;
+	private int totalDifferences = 0;
 
 	public enum ConfigType { FILE, DATABASE } ;
 
@@ -64,36 +66,53 @@ public class Recxx {
 				}
 			}
 		}
-		return reconciliationDifferences;
+		return totalDifferences;
 	}
 
 	public int execute(String filePath, String alias, String configName) throws Exception {
 		this.configName = configName;
+		LOGGER.info("Executing config '" + configName + "' using Alias '" + alias + "' from Properties in '" + filePath + "'");
 		PropertiesConfiguration propertiesConfiguration = new PropertiesConfiguration(filePath);
-		propertiesConfiguration.addProperty(Default.DATABASE_PREFIX, alias);
 		RecxxConfiguration configuration = new RecxxConfiguration(configName, alias, propertiesConfiguration);
 		configuration.configureSubject();
 		execute(configuration);
-		return reconciliationDifferences;
+		return totalDifferences;
 	}
 
-	public void execute(Map <String,String> configMap, String alias, String configName) throws Exception {
+	public void execute(Properties properties, String alias, String configName) throws Exception {
 		this.configName = configName;
-		PropertiesConfiguration propertiesConfiguration = new PropertiesConfiguration();
-		for (String key : configMap.keySet()) {
-			propertiesConfiguration.setProperty(key, configMap.get(key));
-		}
-		propertiesConfiguration.addProperty(Default.DATABASE_PREFIX, alias);
-		RecxxConfiguration configuration = new RecxxConfiguration(configName, alias, propertiesConfiguration);
+		LOGGER.info("Executing config '" + configName + "' using Alias '" + alias + "' from Properties '" + properties + "'");
+		RecxxConfiguration configuration = new RecxxConfiguration(configName, alias, generatePropertiesConfiguration(properties));
 		execute(configuration);
 	}
 
 	public void execute(DataSource dataSource, String configName) throws Exception {
+		execute(dataSource, configName, null);
+	}
+
+	public void execute(DataSource dataSource, String configName, Properties properties) throws Exception {
 		this.configName = configName;
-		RecxxConfiguration configuration = new RecxxConfiguration(dataSource, configName);
+		Connection connection = dataSource.getConnection();
+		DatabaseMetaData metaData = connection.getMetaData();
+		if (properties == null) {
+			LOGGER.info("Executing config '" + configName + "' using DataSource '" + metaData.getURL() + "'");
+		}
+		else {
+			LOGGER.info("Executing config '" + configName + "' using DataSource '" + metaData.getURL() + "' with Properties '" + properties + "'");
+		}
+		if (!connection.isClosed()) connection.close();
+		RecxxConfiguration configuration = new RecxxConfiguration(dataSource, configName, generatePropertiesConfiguration(properties));
 		execute(configuration);
 	}
 
+	private PropertiesConfiguration generatePropertiesConfiguration(Properties properties) {
+		PropertiesConfiguration propertiesConfiguration = new PropertiesConfiguration();
+		for (Object key : properties.keySet()) {
+			propertiesConfiguration.setProperty(key.toString(), properties.get(key));
+		}
+		return null;
+	}
+	
 	public List<Destination> execute() throws Exception {
 		return execute(this.getConfiguration());
 	}
@@ -339,7 +358,7 @@ public class Recxx {
 	}
 
 	private void writeDifference(List<Destination> destinations, Difference difference) {
-		reconciliationDifferences++;
+		totalDifferences++;
 		for (Destination destination : destinations) {
 			destination.writeDifference(difference);
 		}

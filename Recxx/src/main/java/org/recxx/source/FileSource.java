@@ -8,8 +8,11 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.beanutils.ConvertUtilsBean;
@@ -17,6 +20,7 @@ import org.apache.commons.beanutils.converters.DateConverter;
 import org.apache.commons.beanutils.converters.DateTimeConverter;
 import org.apache.log4j.Logger;
 import org.recxx.domain.Column;
+import org.recxx.domain.Conversion;
 import org.recxx.domain.Default;
 import org.recxx.domain.FileMetaData;
 import org.recxx.domain.Key;
@@ -28,14 +32,16 @@ public abstract class FileSource implements Source<Key> {
 
 	private static final String READ_ONLY = "r";
 
+	protected static final int MAX_BYTE_BUFFER_SIZE = Integer.MAX_VALUE;	
 	protected FileMetaData fileMetaData;
 	protected RandomAccessFile randomAccessFile;
-	protected MappedByteBuffer byteBuffer;
+	protected List<MappedByteBuffer> byteBuffers = new ArrayList<MappedByteBuffer>();
 	protected final ConvertUtilsBean convertUtilsBean;
 	private final String alias;
 
 	private FileChannel channel;
 	private Charset charset;
+	private Map<String, List<Conversion>> conversionsMap;
 
 	private long executionTimeMillis = 0;
 
@@ -45,11 +51,34 @@ public abstract class FileSource implements Source<Key> {
 		try {
 			this.randomAccessFile = new RandomAccessFile(fileMetaData.getFilePath(), READ_ONLY);
 			this.channel = randomAccessFile.getChannel();
-			this.byteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, randomAccessFile.length());
+			
+			long length = randomAccessFile.length();
+			long start = 0L;
+			long size = length > MAX_BYTE_BUFFER_SIZE ? MAX_BYTE_BUFFER_SIZE: length;
+			do {
+				this.byteBuffers.add(channel.map(FileChannel.MapMode.READ_ONLY, start, size));
+				start += MAX_BYTE_BUFFER_SIZE;
+				size = (length > start + MAX_BYTE_BUFFER_SIZE ? MAX_BYTE_BUFFER_SIZE: length - start - 1);
+			} while (start < length);
+			
 			this.convertUtilsBean = new ConvertUtilsBean();
 			DateTimeConverter dtConverter = new DateConverter();
 			dtConverter.setPatterns(fileMetaData.getDateFormats().toArray(new String[fileMetaData.getDateFormats().size()]));
 			convertUtilsBean.register(dtConverter, Date.class);
+			conversionsMap = new HashMap<String, List<Conversion>>();
+			if (fileMetaData.getConversions() != null) {
+				for (Conversion conversion : fileMetaData.getConversions()) {
+					List<Conversion> conversionList;
+					if (conversionsMap.containsKey(conversion.getFieldName())) {
+						conversionList = conversionsMap.get(conversion.getFieldName());						
+					}
+					else {
+						conversionList = new ArrayList<Conversion>();
+					}
+					conversionList.add(conversion);
+					conversionsMap.put(conversion.getFieldName(), conversionList);
+				}
+			}
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}
@@ -80,7 +109,12 @@ public abstract class FileSource implements Source<Key> {
 				}
 				else {
 					try {
-						row.add(convertUtilsBean.convert(fields[i], columnTypes.get(i)));
+						if (!conversionsMap.isEmpty()) {
+							row.add(convertUtilsBean.convert(applyRegexConversions(fields[i],i), columnTypes.get(i)));
+						}
+						else {
+							row.add(convertUtilsBean.convert(fields[i], columnTypes.get(i)));
+						}
 					}
 					catch (ConversionException ce) {
 						String message = "Source '" + getAlias() + "': Error attempting to convert value '" + fields[i] +
@@ -106,6 +140,39 @@ public abstract class FileSource implements Source<Key> {
 			throw new RuntimeException(message, e);
 		}
 		return row;
+	}
+
+	private String applyRegexConversions(String value, int index) {
+		String returnValue = value;
+		String fieldName = fileMetaData.getColumns().get(index).getName();
+		if (conversionsMap.containsKey(fieldName)) {
+			List<Conversion> conversionsList = conversionsMap.get(fieldName);
+			for (Conversion conversion : conversionsList) {
+				
+				Pattern pattern = Pattern.compile(conversion.getPattern());
+				Matcher matcher = pattern.matcher(returnValue);
+				switch (conversion.getRegexOperation()) {
+				case REGEX_MATCH:
+					if (matcher.find()) {
+						returnValue = matcher.group(1);
+					}
+					break;
+				case REGEX_REPLACE_FIRST:	
+					if (matcher.find()) {
+						returnValue = matcher.replaceFirst(conversion.getReplacement());
+					}
+					break;						
+				case REGEX_REPLACE_ALL:	
+					if (matcher.find()) {
+						returnValue = matcher.replaceAll(conversion.getReplacement());
+					}
+					break;						
+				default:
+					break;
+				}
+			}
+		}
+		return null;
 	}
 
 	protected boolean isCurrentLineDelimiter(String delimiter, Character... characters) {
@@ -153,9 +220,12 @@ public abstract class FileSource implements Source<Key> {
 	public void close() {
 		LOGGER.info("Closing file: " + fileMetaData.getFilePath());
 		try {
-			randomAccessFile.close(); 	randomAccessFile = null;
-			channel.close(); 			channel = null;
-			byteBuffer = null;
+			randomAccessFile.close(); 	
+			randomAccessFile = null;
+			channel.close(); 			
+			channel = null;
+			byteBuffers.clear();
+			byteBuffers = null;
 			File file = new File(fileMetaData.getFilePath());
 			if (fileMetaData.isTemporaryFile() && file.exists() ) {
 				System.gc();
@@ -178,24 +248,26 @@ public abstract class FileSource implements Source<Key> {
 		String delimiter = Default.UNIX_LINE_DELIMITER;
 		StringBuilder sb = new StringBuilder();
 
-		byteBuffer.rewind();
-		char pp = 'p';
-		char p = ' ';
-		while (byteBuffer.hasRemaining()) {
-			char c = decodeSingleByteToChar(byteBuffer.get());
-			if (p == Default.CARRIAGE_RETURN_CHAR && c == Default.LINE_FEED_CHAR) {
-				carriageReturnLineFeed++;;
+		for (MappedByteBuffer byteBuffer : byteBuffers) {
+			byteBuffer.rewind();
+			char pp = 'p';
+			char p = ' ';
+			while (byteBuffer.hasRemaining()) {
+				char c = decodeSingleByteToChar(byteBuffer.get());
+				if (p == Default.CARRIAGE_RETURN_CHAR && c == Default.LINE_FEED_CHAR) {
+					carriageReturnLineFeed++;;
+				}
+				else if (p != Default.CARRIAGE_RETURN_CHAR && c == Default.LINE_FEED_CHAR) {
+					lineFeeds++;
+				}
+				else if (pp != Default.LINE_FEED_CHAR && p == Default.CARRIAGE_RETURN_CHAR && c != Default.LINE_FEED_CHAR) {
+					carriageReturns++;
+				}
+				pp = p;
+				p = c;
 			}
-			else if (p != Default.CARRIAGE_RETURN_CHAR && c == Default.LINE_FEED_CHAR) {
-				lineFeeds++;
-			}
-			else if (pp != Default.LINE_FEED_CHAR && p == Default.CARRIAGE_RETURN_CHAR && c != Default.LINE_FEED_CHAR) {
-				carriageReturns++;
-			}
-			pp = p;
-			p = c;
+			byteBuffer.rewind();
 		}
-		byteBuffer.rewind();
 
 		sb.append("Source '").append(getAlias()).append("': Auto detected line delimiter as ");
 		if (lineFeeds > carriageReturnLineFeed && lineFeeds > carriageReturns) {
@@ -252,11 +324,10 @@ public abstract class FileSource implements Source<Key> {
 
 	protected abstract Map<Key, ?> getSourceDataMap();
 
-	protected abstract void addRow(Key key, List<?> fields, int start, int end);
+	protected abstract void addRow(Key key, List<?> fields, int byteBufferStart, int start, int byteBufferEnd, int end);
 
 	public Source<Key> call() {
 		StringBuilder line = new StringBuilder();
-		int start = 0;
 		boolean isFirstRow = true;
 		boolean isIgnoreHeaderRow = fileMetaData.isIgnoreHederRow();
 		String delimiter = getRowDelimiter();
@@ -268,44 +339,51 @@ public abstract class FileSource implements Source<Key> {
 		}
 
 		long startTimeMillis = System.currentTimeMillis();
-		int i = 0;
-		char p = ' ';
-		while (byteBuffer.hasRemaining()) {
-			char c = decodeSingleByteToChar(byteBuffer.get());
-			if ( delimiter.length() == 1 && isCurrentLineDelimiter(delimiter, c)
-					|| (delimiter.length() == 2 && isCurrentLineDelimiter(delimiter, p, c))
-					|| !byteBuffer.hasRemaining() ) {
-				if (isFirstRow && isIgnoreHeaderRow) {
-					if (columnNamesNotSupplied) {
-						List<?> columns = parseRow(line.toString(), getHeaderColumnTypes(fileMetaData.getColumns().size()));
-						fileMetaData = FileMetaData.valueOf(fileMetaData, columns);
+		int count = 0;
+		int byteBufferStartIndex = 0;
+		int start = 0;
+		char previousChar = ' ';
+		
+		for (int byteBufferIndex = 0; byteBufferIndex < byteBuffers.size(); byteBufferIndex++) {
+			MappedByteBuffer byteBuffer = byteBuffers.get(byteBufferIndex);
+			byteBuffer.rewind();
+		
+			while (byteBuffer.hasRemaining()) {
+				char currentChar = decodeSingleByteToChar(byteBuffer.get());
+				if ( delimiter.length() == 1 && isCurrentLineDelimiter(delimiter, currentChar)
+						|| (delimiter.length() == 2 && isCurrentLineDelimiter(delimiter, previousChar, currentChar))
+						|| !byteBuffer.hasRemaining() ) {
+					if (isFirstRow && isIgnoreHeaderRow) {
+						if (columnNamesNotSupplied  && !line.toString().isEmpty()) {
+							List<?> columns = parseRow(line.toString(), getHeaderColumnTypes(fileMetaData.getColumns().size()));
+							fileMetaData = FileMetaData.valueOf(fileMetaData, columns);
+						}
+						isFirstRow = false;
 					}
-					isFirstRow = false;
-				}
-				else {
-					if (line.length() != 0) {
-						List<?> fields = parseRow(line.toString(), fileMetaData.getColumnTypes());
-						Key key = createKey(fields, line.toString(), i);
-						addRow(key, fields, start, byteBuffer.position() - delimiter.length());
-						i++;
-						if (i % 10000 == 0) {
-							LOGGER.info("Source '" + getAlias() + "': Processed " + i + " rows");
+					else {
+						if (line.length() != 0) {
+							List<?> fields = parseRow(line.toString(), fileMetaData.getColumnTypes());
+							Key key = createKey(fields, line.toString(), count);
+							addRow(key, fields, byteBufferStartIndex, start, byteBufferIndex, byteBuffer.position() - delimiter.length());
+							count++;
+							if (count % 10000 == 0) {
+								LOGGER.info("Source '" + getAlias() + "': Processed " + count + " rows");
+							}
 						}
 					}
+					start = byteBuffer.position();
+					line.setLength(0);
+				} else if (!delimiter.contains(String.valueOf(currentChar))) {
+					line.append(currentChar);
 				}
-				start = byteBuffer.position();
-				line.setLength(0);
-			} else if (!delimiter.contains(String.valueOf(c))) {
-				line.append(c);
+				previousChar = currentChar;
 			}
-			p = c;
 		}
-		LOGGER.info("Source '" + getAlias() + "': Processed " + i + " rows");
+		LOGGER.info("Source '" + getAlias() + "': Processed " + count + " rows");
 		executionTimeMillis = System.currentTimeMillis() - startTimeMillis;
 		return this;
 	}
 
-	@Override
 	public long getExecutionTimeMillis() {
 		return executionTimeMillis;
 	}

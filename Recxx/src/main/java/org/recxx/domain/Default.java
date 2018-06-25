@@ -21,6 +21,7 @@ public interface Default {
 
 	public static final String PILCRO_DELIMITER = "\u00B6";
 	public static final String PIPE_DELIMITER = "|";
+	public static final String REGEX_DELIMITER = "¬";
 
 	public static final SimpleDateFormat FILE_DATE_FORMAT = new SimpleDateFormat("yyyy-MMM-dd_hhmmss.SSS");
 	public static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("dd-MMM-yyyy hh:mm:ss.SSS");
@@ -35,6 +36,7 @@ public interface Default {
 	public static final String CONFIG_NAME = "configName";
 	public static final String DATABASE_CONFIG_TABLE = "RecxxConfig";
 	public static final String DATABASE_PREFIX = "DatabasePrefix";
+	public static final String DATABASE_CONFIG_DATA_SOURCE = "DatabaseConfigDataSource";
 
 	public static final String EMPTY_KEY_COLUMN_NAME = "recxxGeneratedRowNumber";
 	public static final String NO_DELIMITER = "";

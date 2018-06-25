@@ -26,20 +26,20 @@ public class ReconciliationAssertTest {
 
 	@Before
 	public void setup() {
-		when(reconciledSummary.getMatchCount()).thenReturn(10);
-		when(reconciledSummary.getAlias1Count()).thenReturn(10);
-		when(reconciledSummary.getAlias2Count()).thenReturn(10);
-		when(unreconciledAlias1Summary.getMatchCount()).thenReturn(10);
-		when(unreconciledAlias1Summary.getAlias1Count()).thenReturn(9);
-		when(unreconciledAlias1Summary.getAlias2Count()).thenReturn(10);
+		when(reconciledSummary.getMatchCount()).thenReturn(new Integer(10));
+		when(reconciledSummary.getAlias1Count()).thenReturn(new Integer(10));
+		when(reconciledSummary.getAlias2Count()).thenReturn(new Integer(10));
+		when(unreconciledAlias1Summary.getMatchCount()).thenReturn(new Integer(10));
+		when(unreconciledAlias1Summary.getAlias1Count()).thenReturn(new Integer(9));
+		when(unreconciledAlias1Summary.getAlias2Count()).thenReturn(new Integer(10));
 		when(unreconciledAlias1Summary.toOutputString()).thenReturn("Alias 1: 9, Alias 2: 10");
-		when(unreconciledAlias2Summary.getAlias1Count()).thenReturn(10);
-		when(unreconciledAlias2Summary.getAlias2Count()).thenReturn(9);
-		when(unreconciledAlias2Summary.getMatchCount()).thenReturn(10);
+		when(unreconciledAlias2Summary.getAlias1Count()).thenReturn(new Integer(10));
+		when(unreconciledAlias2Summary.getAlias2Count()).thenReturn(new Integer(9));
+		when(unreconciledAlias2Summary.getMatchCount()).thenReturn(new Integer(10));
 		when(unreconciledAlias2Summary.toOutputString()).thenReturn("Alias 1: 10, Alias 2: 9");
-		when(unreconciledAliasBothSummary.getAlias1Count()).thenReturn(9);
-		when(unreconciledAliasBothSummary.getAlias2Count()).thenReturn(9);
-		when(unreconciledAliasBothSummary.getMatchCount()).thenReturn(8);
+		when(unreconciledAliasBothSummary.getAlias1Count()).thenReturn(new Integer(9));
+		when(unreconciledAliasBothSummary.getAlias2Count()).thenReturn(new Integer(9));
+		when(unreconciledAliasBothSummary.getMatchCount()).thenReturn(new Integer(8));
 		when(unreconciledAliasBothSummary.toOutputString()).thenReturn("Alias 1: 9, Alias 2: 9");
 	}
 

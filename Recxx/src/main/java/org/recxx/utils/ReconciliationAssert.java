@@ -25,13 +25,13 @@ public class ReconciliationAssert {
 	public static void assertReconciles(Recxx recxx) throws Exception {
 		Assert.assertNotNull(recxx);
 		Summary summary = recxx.execute().get(0).getSummary();
-		Assert.assertTrue(summary.toOutputString(), summary.getAlias1Count() == summary.getMatchCount() && summary.getAlias2Count() == summary.getMatchCount() );
+		Assert.assertTrue(summary.toOutputString(), summary.getAlias1Count().equals(summary.getMatchCount()) && summary.getAlias2Count().equals(summary.getMatchCount()));
 	}
 
 	public static void failsToReconcile(Recxx recxx) throws Exception {
 		Assert.assertNotNull(recxx);
 		Summary summary = recxx.execute().get(0).getSummary();
-		Assert.assertFalse(summary.toOutputString(), summary.getAlias1Count() == summary.getMatchCount() && summary.getAlias2Count() == summary.getMatchCount() );
+		Assert.assertFalse(summary.toOutputString(), summary.getAlias1Count().equals(summary.getMatchCount()) && summary.getAlias2Count().equals(summary.getMatchCount()));
 	}
 
 }

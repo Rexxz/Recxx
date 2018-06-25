@@ -43,6 +43,11 @@ public class SystemUtils {
 		return used.divide(max, 2, BigDecimal.ROUND_HALF_UP).multiply(new BigDecimal(100));
 	}
 
-
+	public static String quote(String input) {
+		if (input != null) {
+			return "\"" + input + "\"";
+		}
+		return input;
+	}
 
 }

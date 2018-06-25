@@ -209,7 +209,6 @@ public class ExcelSource implements Source<Key> {
 
 	}
 
-	@Override
 	public long getExecutionTimeMillis() {
 		return executionTimeMillis;
 	}

@@ -40,7 +40,6 @@ public class ExcelSummaryDestination extends AbstractDestination {
 		this.excelMetaData = excelMetaData;
 	}
 
-	@Override
 	public void open() throws IOException {
 		File excelFile = new File(excelMetaData.getFilePath());
 		if (!excelFile.exists()) {
@@ -64,7 +63,6 @@ public class ExcelSummaryDestination extends AbstractDestination {
 
 	}
 
-	@Override
 	public void writeHeader(Source<Key> source1, Source<Key> source2) {
 		if (newWorkbook) {
 			createRow();
@@ -85,12 +83,10 @@ public class ExcelSummaryDestination extends AbstractDestination {
     	}
 	}
 
-	@Override
 	public void writeDifference(Difference difference) {
 		// Differences are not persisted by this summary writer
 	}
 
-	@Override
 	public void writeSummary(Summary summary) {
 		createRow();
 		getCell(currentRow, 0).setCellValue(summary.getConfigName());
@@ -122,7 +118,6 @@ public class ExcelSummaryDestination extends AbstractDestination {
 		return row.getCell(cellIndex);
 	}
 
-	@Override
 	public void close() throws IOException {
 		try {
 			formatSheet(sheet);

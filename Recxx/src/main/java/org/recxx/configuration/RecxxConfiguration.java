@@ -10,11 +10,14 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import javax.sql.DataSource;
 
 import org.apache.commons.configuration.AbstractConfiguration;
 import org.apache.commons.configuration.CombinedConfiguration;
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.DatabaseConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -26,6 +29,8 @@ import org.apache.commons.lang3.builder.ToStringStyle;
 import org.apache.log4j.Logger;
 import org.recxx.destination.ConsoleDestination;
 import org.recxx.domain.Column;
+import org.recxx.domain.Conversion;
+import org.recxx.domain.Conversion.Operation;
 import org.recxx.domain.DatabaseMetaData;
 import org.recxx.domain.Default;
 import org.recxx.factory.DestinationFactory;
@@ -56,6 +61,14 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	public RecxxConfiguration(DataSource dataSource, String configName) throws ConfigurationException {
 		config = new CombinedConfiguration();
 		config.addConfiguration(new SystemConfiguration());
+		DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(dataSource, Default.DATABASE_CONFIG_TABLE, Default.CONFIG_NAME, Default.CONFIG_KEY, Default.CONFIG_VALUE, configName);
+		config.addConfiguration(databaseConfiguration);
+	}
+
+	public RecxxConfiguration(DataSource dataSource, String configName, PropertiesConfiguration generatePropertiesConfiguration) {
+		config = new CombinedConfiguration();
+		config.addConfiguration(new SystemConfiguration());
+		config.addConfiguration(generatePropertiesConfiguration);
 		DatabaseConfiguration databaseConfiguration = new DatabaseConfiguration(dataSource, Default.DATABASE_CONFIG_TABLE, Default.CONFIG_NAME, Default.CONFIG_KEY, Default.CONFIG_VALUE, configName);
 		config.addConfiguration(databaseConfiguration);
 	}
@@ -160,7 +173,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		String filePath = getString(alias + ".filePath");
 		if (filePath == null && mandatory) {
 			throw new IllegalArgumentException("'" + alias + ".filePath' not specified in configuration, " +
-					"this component must have a filePath, configured using '<alias>.filePath=<value>'");
+					"this component must have a filePath, configured using '<alias>.filePath=<value>': " + toString());
 		}
 		return filePath;
 	}
@@ -174,7 +187,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		File file = new File(filePath);
 		if (!file.exists() || !file.canRead()) {
 			throw new IllegalArgumentException("'" + alias + ".filePath' specified in configuration " +
-					"does not exist, or is not readable, please check '" + filePath + "'");
+					"does not exist, or is not readable, please check '" + filePath + "': " + toString());
 		}
 		return filePath;
 	}
@@ -231,7 +244,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		if (columns.isEmpty()) {
 			throw new IllegalArgumentException("'" + alias + ".columns' not specified in configuration, " +
 					"this component must have columns, configured using '<alias>.columns=<name>|<type>, <name>|<type>...'," +
-					" and columns must match across sources for comparison to function");
+					" and columns must match across sources for comparison to function: " + toString());
 		}
 		List<Column> columnDefinitions = new ArrayList<Column>();
 		for (String column : columns) {
@@ -266,11 +279,53 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		return columnDefinitions;
 	}
 
+	public List<Conversion> configureConversions(String alias) {
+		List<String> conversionStrings = getStrings(alias + ".conversions");
+		List<Conversion> conversions = new ArrayList<Conversion>();
+		for (String conversionString : conversionStrings) {
+			String[] split = conversionString.split("\\" + Default.PIPE_DELIMITER);
+			String fieldName; String expression; Operation operation;
+			switch (split.length) {
+			case 2:
+				fieldName = split[0];
+				expression = split[1];
+				String[] splitExpression = expression.split(Default.REGEX_DELIMITER);
+					switch (splitExpression.length) {
+					case 3:
+						operation = Conversion.Operation.valueOf(splitExpression[0]);
+						conversions.add(new Conversion(fieldName, operation, splitExpression[1], splitExpression[2]));
+						break;
+					case 2:
+						operation = Conversion.Operation.valueOf(splitExpression[0]);
+						if (operation.equals(Conversion.Operation.REGEX_REPLACE_ALL) || operation.equals(Conversion.Operation.REGEX_REPLACE_FIRST)) {
+							conversions.add(new Conversion(fieldName, operation, splitExpression[1], ""));
+						}
+						else {
+							conversions.add(new Conversion(fieldName, operation, splitExpression[1]));
+						}
+					break;
+					default:
+						throw new IllegalArgumentException("'" + alias + ".conversions' incorrectly specified in configuration, " +
+								"this component must have conversions, configured using '<alias>.conversions=<fieldName>|REGEX_MATCH¬<regexPattern> " +
+								"OR <fieldName>|REGEX_REPLACE¬<regexPattern>¬<replacementString> OR <fieldName>|REGEX_REPLACE_ALL¬<regexPattern>¬<replacementString>', " +
+								" regex expression definition '" + expression + "' cannot be split with separator '" + Default.REGEX_DELIMITER + "'");
+					}
+				break;
+			default:
+				throw new IllegalArgumentException("'" + alias + ".conversions' incorrectly specified in configuration, " +
+						"this component must have conversions, configured using '<alias>.conversions=<fieldName>|REGEX_MATCH¬<regexPattern> " +
+						"OR <fieldName>|REGEX_REPLACE¬<regexPattern>¬<replacementString> OR <fieldName>|REGEX_REPLACE_ALL¬<regexPattern>¬<replacementString>', " +
+						" conversion definition '" + conversionString + "' cannot be split with separator '" + Default.PIPE_DELIMITER + "'");
+			}
+		}
+		return conversions;
+	}
+	
 	public String configureSourceType(String alias, Map<Class<?>, SourceFactory> sourceFactoryMap) {
 		String sourceType = getString(alias + ".type");
 		if (sourceType == null) {
 			throw new IllegalArgumentException("'" + alias + ".type' not specified in configuration, " +
-					"configuration requires one of the following values: " + sourceFactoryMap.keySet());
+					"configuration requires one of the following values: " + sourceFactoryMap.keySet() + ": " + toString());
 		}
 		return sourceType;
 	}
@@ -296,7 +351,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 		List<String> sourceAliases = getStrings("sources");
 		if (sourceAliases == null || sourceAliases.isEmpty()) {
 			throw new IllegalArgumentException("'sources' specified incorrectly or missing in configuration, " +
-					"configuration requires specification using 'sources=<alias1>, <alias2>'");
+					"configuration requires specification using 'sources=<alias1>, <alias2>'" + ": " + toString());
 		}
 		return sourceAliases;
 	}
@@ -328,7 +383,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 				sb.append("'").append(alias).append(".driverClassName' not specified in configuration");
 			}
 			sb.append(", this must be configured and available in the classpath");
-			throw new IllegalArgumentException(sb.toString());
+			throw new IllegalArgumentException(sb.toString() + ": " + toString());
 		}
 		return databaseDriver;
 	}
@@ -346,7 +401,7 @@ public class RecxxConfiguration extends AbstractConfiguration {
 				sb.append("'").append(alias).append(".url' not specified in configuration");
 			}
 			sb.append(", this must be configured according to the driver configuration");
-			throw new IllegalArgumentException(sb.toString());
+			throw new IllegalArgumentException(sb.toString() + ": " + toString());
 		}
 		return databaseUrl;
 	}
@@ -380,15 +435,40 @@ public class RecxxConfiguration extends AbstractConfiguration {
 				sb.append(sb.length() != 0 ? " OR " : "");
 				sb.append("'").append(alias).append(".password' not specified in configuration");
 			}
-			throw new IllegalArgumentException(sb.toString());
+			throw new IllegalArgumentException(sb.toString() + ": " + toString());
 		}
 		return databasePassword;
 	}
 
+	public DatabaseMetaData configureDatabaseMetaData(String alias) {
+		String databaseDriver = getString(alias + ".driverClassName");
+		String databaseUrl = getString(alias + ".url");
+		String databaseUserId = getString(alias + ".username");
+		String databasePassword = getString(alias + ".password");
+		if (databaseDriver == null && databaseUrl == null && databaseUserId == null && databasePassword == null) {
+			for (Configuration config : this.config.getConfigurations()) {
+				if (DatabaseConfiguration.class.isAssignableFrom(config.getClass())) {
+					return new DatabaseMetaData.Builder()
+						.dataSource(((DatabaseConfiguration)config).getDatasource())
+						.build();
+				}
+			}
+		}
+		else {
+			return new DatabaseMetaData.Builder()
+				.databaseDriver(configureDatabaseDriver(alias))
+				.databaseUrl(configureDatabaseUrl(alias))
+				.databaseUserId(configureDatabaseUserId(alias))
+				.databasePassword(configureDatabasePassword(alias))
+				.build();
+		}
+		return null;
+	}
+	
 	public String configureSql(String alias) {
 		String databasePassword = getString(alias + ".sql");
 		if (databasePassword == null) {
-			throw new IllegalArgumentException("'" + alias + ".sql' not specified in configuration");
+			throw new IllegalArgumentException("'" + alias + ".sql' not specified in configuration" + ": " + toString());
 		}
 		return databasePassword;
 	}
@@ -406,13 +486,22 @@ public class RecxxConfiguration extends AbstractConfiguration {
 	@Override
 	public String toString() {
 		StringBuilder stringBuilder = new StringBuilder(10000);
-		for (Iterator<String> iterator = config.getKeys(); iterator.hasNext();) {
-			String parameterName = iterator.next();
-			stringBuilder.append(parameterName)
+		String lineSeparator = System.getProperty("line.separator");
+		
+		for (Configuration config: this.config.getConfigurations()) {
+			SortedSet<String> keys = new TreeSet<String>();
+			stringBuilder.append(lineSeparator).append(config.getClass().getName()).append(": ").append(lineSeparator);
+			for (Iterator<String> iterator = config.getKeys(); iterator.hasNext();) {
+				keys.add(iterator.next());
+			}
+			for (String key : keys) {
+				stringBuilder.append(key)
 				.append(" = ")
-				.append(config.getProperty(parameterName).toString().replace("[","").replace("]",""))
-				.append(System.getProperty("line.separator"));
+				.append(config.getProperty(key).toString().replace("[","").replace("]",""))
+				.append(lineSeparator);
+			}
 		}
+		
 		return ToStringBuilder.reflectionToString(this, ToStringStyle.SHORT_PREFIX_STYLE).concat(stringBuilder.toString());
 	}
 

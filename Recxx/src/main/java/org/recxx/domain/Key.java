@@ -8,6 +8,8 @@ import java.util.List;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 
+import static org.recxx.utils.SystemUtils.quote;
+
 public class Key implements CharSequence, Serializable {
 
 	static final long serialVersionUID = 1L;
@@ -78,7 +80,7 @@ public class Key implements CharSequence, Serializable {
 	public String toOutputString(String delimiter) {
 		StringBuilder sb = new StringBuilder();
 		for (String keyPart : asList()) {
-			sb.append(keyPart).append(delimiter);
+			sb.append(quote(keyPart)).append(delimiter);
 		}
 		return sb.toString();
 	}

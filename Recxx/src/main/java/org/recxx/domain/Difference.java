@@ -10,6 +10,8 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import static org.recxx.utils.SystemUtils.quote;
+
 public class Difference {
 	
 	private final Key key;
@@ -128,18 +130,24 @@ public class Difference {
 	public String toOutputString(String delimiter, SimpleDateFormat dateFormatter, DecimalFormat percentFormat) {
 		StringBuilder sb = new StringBuilder();
 		sb.append(getKey().toOutputString(delimiter));
-		sb.append(getColumn().getName()).append(delimiter);
+		sb.append(quote(getColumn().getName())).append(delimiter);
 		if (getField1() != null && Date.class.isAssignableFrom(getField1().getClass())) {
+			sb.append(quote(dateFormatter.format(getField1()))).append(delimiter);
+		}
+		else if (getField1() != null && Number.class.isAssignableFrom(getField1().getClass())) {
 			sb.append(dateFormatter.format(getField1())).append(delimiter);
 		}
 		else {
-			sb.append(getField1()).append(delimiter);
+			sb.append(quote(getField1() == null ? "" : getField1().toString())).append(delimiter);
 		}
 		if (getField2() != null && Date.class.isAssignableFrom(getField2().getClass())) {
+			sb.append(quote(dateFormatter.format(getField2()))).append(delimiter);
+		}
+		else if (getField2() != null && Number.class.isAssignableFrom(getField2().getClass())) {
 			sb.append(dateFormatter.format(getField2())).append(delimiter);
 		}
 		else {
-			sb.append(getField2()).append(delimiter);
+			sb.append(quote(getField2() == null ? "" : getField2().toString())).append(delimiter);
 		}
 		if (getField1() != null && Number.class.isAssignableFrom(getField1().getClass()) && 
 				getField2() != null && Number.class.isAssignableFrom(getField2().getClass())) {

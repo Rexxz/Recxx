@@ -47,6 +47,7 @@ public class FileSourceFactory implements SourceFactory {
 										.columnsToIgnore(configuration.configureColumnsToIgnore(alias))
 										.columnsToCompare(configuration.configureColumnsToCompare(alias))
 										.dateFormats(configuration.configureDateFormats(alias))
+										.conversions(configuration.configureConversions(alias))
 										.build();		
 		
 		try {

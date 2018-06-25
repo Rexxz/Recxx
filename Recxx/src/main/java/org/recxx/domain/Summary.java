@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -32,7 +33,9 @@ public class Summary implements Serializable {
 	private Integer alias1Count;
 	private Integer alias2Count;
 	private Integer matchCount;
+	@Column(scale=8)
 	private BigDecimal alias1MatchPercent;
+	@Column(scale=8)
 	private BigDecimal alias2MatchPercent;
 	private Long alias1ExecutionTime;
 	private Long alias2ExecutionTime;

@@ -28,6 +28,7 @@ public class FileMetaData {
 	private final List<Column> columns;
 	private final List<String> columnNames;
 	private final List<String> columnsToIgnore;
+	private final List<Conversion> conversions;
 
 	public static final Logger LOGGER = Logger.getLogger(FileMetaData.class);
 	
@@ -46,6 +47,7 @@ public class FileMetaData {
 		 List<String> dateFormats;
 		 List<Column> columns;
 		 List<String> columnsToIgnore;
+		 List<Conversion> conversions;
 		 
 		 public Builder filePath(String filePath) {
 			 this.filePath = filePath;
@@ -102,6 +104,11 @@ public class FileMetaData {
 			 return this;
 		 }
 		 
+		 public Builder conversions(List<Conversion> conversions) {
+			 this.conversions = conversions;
+			 return this;
+		 }
+		 
 		 public FileMetaData build() {
 			 return new FileMetaData(this);
 		 }
@@ -121,6 +128,7 @@ public class FileMetaData {
 		this.columnsToIgnore = builder.columnsToIgnore;			
 		this.columnsToCompare = generateColumnsToCompare(builder.columnsToCompare, builder.columnsToIgnore, builder.keyColumns, builder.columns);			
 		this.columnNames = generateColumnNames(builder.columns);
+		this.conversions = builder.conversions;
 		reSortKeyColumns();
 	}
 
@@ -174,6 +182,10 @@ public class FileMetaData {
 
 	public List<String> getColumnsToIgnore() {
 		return columnsToIgnore;
+	}
+	
+	public List<Conversion> getConversions() {
+		return conversions;
 	}
 	
 	public List<Class<?>> getColumnTypes() {

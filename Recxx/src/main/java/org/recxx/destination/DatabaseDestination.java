@@ -1,12 +1,15 @@
 package org.recxx.destination;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
 import org.recxx.domain.DatabaseMetaData;
@@ -28,16 +31,9 @@ public class DatabaseDestination extends AbstractDestination {
 	}
 
 	public void open() throws IOException {
-		StringBuilder sb = new StringBuilder();
-		LOGGER.info(sb.append("': Connecting to Server '").append(databaseMetaData.getDatabaseUrl())
-				.append("', User '").append(databaseMetaData.getDatabaseUserId()).toString());
 
 		Configuration config = new Configuration()
 	    	.setProperty("hibernate.mapping.precedence", "class")
-	    	.setProperty("hibernate.connection.driver_class", databaseMetaData.getDatabaseDriver())
-	    	.setProperty("hibernate.connection.url", databaseMetaData.getDatabaseUrl())
-	    	.setProperty("hibernate.connection.username", databaseMetaData.getDatabaseUserId())
-	    	.setProperty("hibernate.connection.password", databaseMetaData.getDatabasePassword())
 	    	.setProperty("hibernate.cache.provider_class", "org.hibernate.cache.NoCacheProvider")
 		    .setProperty("hibernate.show_sql", "false")
 		    .setProperty("hibernate.format_sql","true")
@@ -48,8 +44,32 @@ public class DatabaseDestination extends AbstractDestination {
 	    	.setProperty("hibernate.generate_statistics", "true");
 	    
 	    config.addAnnotatedClass(org.recxx.domain.Summary.class);
-       
-	    ServiceRegistry serviceRegistry = new ServiceRegistryBuilder().applySettings(config.getProperties()).buildServiceRegistry();        
+	    
+	    ServiceRegistryBuilder serviceRegistryBuilder = new ServiceRegistryBuilder();
+	    serviceRegistryBuilder.applySettings(config.getProperties());
+	    
+	    StringBuilder sb = new StringBuilder();
+	    if (databaseMetaData.getDataSource() != null) {
+	    	serviceRegistryBuilder.applySetting(Environment.DATASOURCE, databaseMetaData.getDataSource());
+			LOGGER.info(sb.append("': DataSource '").append(databaseMetaData.getDataSource().toString()));
+			try {
+				Connection connection = databaseMetaData.getDataSource().getConnection();
+				java.sql.DatabaseMetaData metaData = connection.getMetaData();
+				LOGGER.info(sb.append("': DataSource '").append(metaData.getURL()).append(" ").append(metaData.getUserName()));
+				connection.close();
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
+	    }
+	    else {
+	    	serviceRegistryBuilder.applySetting(Environment.DRIVER, databaseMetaData.getDatabaseDriver());
+	    	serviceRegistryBuilder.applySetting(Environment.URL, databaseMetaData.getDatabaseUrl());
+	    	serviceRegistryBuilder.applySetting(Environment.USER, databaseMetaData.getDatabaseUserId());
+	    	serviceRegistryBuilder.applySetting(Environment.PASS, databaseMetaData.getDatabasePassword());
+			LOGGER.info(sb.append("': DataSource '").append(databaseMetaData.getDatabaseUrl()).append(" ").append(databaseMetaData.getDatabaseUserId()));
+	    }
+	    
+	    ServiceRegistry serviceRegistry = serviceRegistryBuilder.buildServiceRegistry();        
 	    sessionFactory = config.buildSessionFactory(serviceRegistry);
 	    currentSession = sessionFactory.getCurrentSession();
 

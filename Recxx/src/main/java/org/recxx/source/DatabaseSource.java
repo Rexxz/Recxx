@@ -255,7 +255,6 @@ public class DatabaseSource implements Source<Key> {
 		fileMetaData = null;
 	}
 
-	@Override
 	public long getExecutionTimeMillis() {
 		return executionTimeMillis;
 	}

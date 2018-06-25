@@ -29,7 +29,7 @@ public class CachedFileSource extends FileSource {
 		return dataMap;
 	}
 
-	protected void addRow(Key key, List<?> fields, int start, int end) {
+	protected void addRow(Key key, List<?> fields, int byteBufferStart, int start, int byteBufferEnd, int end) {
 		dataMap.put(key, fields);
 	}
 

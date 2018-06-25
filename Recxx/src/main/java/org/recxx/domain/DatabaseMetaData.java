@@ -3,6 +3,8 @@ package org.recxx.domain;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.sql.DataSource;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -14,6 +16,7 @@ public class DatabaseMetaData {
 	private final String databaseDriver;
 	private final String databaseUserId;
 	private final String databasePassword;
+	private final DataSource dataSource;
 	private final String sql;
 	private final String filePath;
 	private final String delimiter;
@@ -31,6 +34,7 @@ public class DatabaseMetaData {
 		 String databaseDriver;
 		 String databaseUserId;
 		 String databasePassword;
+		 DataSource dataSource;
 		 String sql;
 		 String filePath;
 		 String delimiter;
@@ -59,6 +63,11 @@ public class DatabaseMetaData {
 		 
 		 public Builder databasePassword(String databasePassword) {
 			 this.databasePassword = databasePassword;
+			 return this;
+		 }
+		 
+		 public Builder dataSource(DataSource dataSource) {
+			 this.dataSource = dataSource;
 			 return this;
 		 }
 		 
@@ -113,6 +122,7 @@ public class DatabaseMetaData {
 		this.databaseDriver = builder.databaseDriver;
 		this.databaseUserId = builder.databaseUserId;
 		this.databasePassword = builder.databasePassword;
+		this.dataSource = builder.dataSource;
 		this.sql = builder.sql;
 		this.filePath = builder.filePath;
 		this.delimiter = builder.delimiter;
@@ -141,6 +151,10 @@ public class DatabaseMetaData {
 		return databasePassword;
 	}
 
+	public DataSource getDataSource() {
+		return dataSource;
+	}
+	
 	public String getSql() {
 		return sql;
 	}
